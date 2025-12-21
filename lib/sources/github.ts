@@ -47,15 +47,27 @@ async function fetchBlob(url: string): Promise<string> {
   return Buffer.from(base64, "base64").toString();
 }
 
+async function getDefaultBranch() {
+  const out = await octokit.request("GET /repos/{owner}/{repo}", {
+    ...config,
+    headers: {
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+
+  return out.data.default_branch;
+}
+
 /**
  * @returns Sha code of `/docs` directory in GitHub repo
  */
 async function getDocsSha() {
+  const defaultBranch = await getDefaultBranch();
   const out = await octokit.request(
     "GET /repos/{owner}/{repo}/git/trees/{tree_sha}",
     {
       ...config,
-      tree_sha: "canary",
+      tree_sha: defaultBranch,
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
       },
