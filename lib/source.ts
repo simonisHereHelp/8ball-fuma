@@ -1,6 +1,7 @@
 import { loader } from "fumadocs-core/source";
 import * as path from "node:path";
 import { createGitHubSource } from "./sources/github";
+import { createGoogleDriveSource } from "./sources/google-drive";
 import { createLocalSource } from "./sources/local";
 
 const FileNameRegex = /^\d\d-(.+)$/;
@@ -8,9 +9,13 @@ const FileNameRegex = /^\d\d-(.+)$/;
 export const isLocal =
   process.env.LOCAL || process.env.NEXT_PHASE === "phase-production-build";
 
+const isGoogleDrive = Boolean(
+  'AIzaSyAMpDmSFyTWB_90ZJWcBiIaXX8-1srgTew' && '1QZIlGdbY2YPBQrgdmWILdE2ITA-YtdEW',
+);
+//process.env.GOOGLE_API_KEY && process.env.DRIVE_FOLDER_ID,
 export const source = loader({
   baseUrl: "/docs",
-  source: isLocal ? await createLocalSource() : await createGitHubSource(),
+  source: isLocal ? await createLocalSource() : await createGoogleDriveSource(),
   slugs(info) {
     const segments = info.flattenedPath
       .split("/")
