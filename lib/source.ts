@@ -9,9 +9,7 @@ const FileNameRegex = /^\d\d-(.+)$/;
 export const isLocal =
   process.env.LOCAL || process.env.NEXT_PHASE === "phase-production-build";
 
-const isGoogleDrive = Boolean(
-  'AIzaSyAMpDmSFyTWB_90ZJWcBiIaXX8-1srgTew' && '1QZIlGdbY2YPBQrgdmWILdE2ITA-YtdEW',
-);
+
 //process.env.GOOGLE_API_KEY && process.env.DRIVE_FOLDER_ID,
 export const source = loader({
   baseUrl: "/docs",
