@@ -10,7 +10,7 @@ if (!token) throw new Error(`environment variable GITHUB_TOKEN is needed.`);
 
 const config = {
   owner: "simonisHereHelp",
-  repo: "mapron_booth",
+  repo: "8ball-fuma2",
 };
 
 export const octokit = new Octokit({
