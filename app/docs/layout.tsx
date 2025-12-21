@@ -44,13 +44,22 @@ export default function Layout({ children }: { children: ReactNode }) {
               url: "/docs/architecture",
             },
             {
-              title: "其它",
+              title: "無三小",
               icon: (
                 <span className="border border-fd-foreground/50 bg-gradient-to-t from-fd-foreground/30 rounded-lg p-1 text-fd-foreground">
                   <RocketIcon />
                 </span>
               ),
               url: "/docs/community",
+            },
+            {
+              title: "本地路用",
+              icon: (
+                <span className="border border-fd-foreground/50 bg-gradient-to-t from-fd-foreground/30 rounded-lg p-1 text-fd-foreground">
+                  <RocketIcon />
+                </span>
+              ),
+              url: "/docs/others",
             },
           ],
         }}
