@@ -9,7 +9,7 @@ import {
 } from "fumadocs-ui/page";
 import { notFound } from "next/navigation";
 
-export const revalidate = 7200;
+export const revalidate = 0; // reval every page in eg. 7200 (every 2 hours) pr = 0
 
 export default async function Page(props: {
   params: Promise<{ slug?: string[] }>;
