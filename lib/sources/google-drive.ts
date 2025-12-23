@@ -36,9 +36,9 @@ async function listFolder(folder: string): Promise<DriveFile[]> {
 
     const res = await fetch(
       `https://www.googleapis.com/drive/v3/files?${params.toString()}`,
-      { cache: "no-store" },
+       { next: { revalidate: 30 } }
     );
-
+  //   { cache: "no-store" }, or  { cache: "force-cache" }
     if (!res.ok) {
       throw new Error(await res.text());
     }
@@ -58,7 +58,7 @@ async function listFolder(folder: string): Promise<DriveFile[]> {
 async function fetchFileContent(fileId: string): Promise<string> {
   const res = await fetch(
     `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${apiKey}`,
-    { cache: "no-store" },
+     { next: { revalidate: 30 } }
   );
 
   if (!res.ok) {

@@ -22,7 +22,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                   <BoxIcon />
                 </span>
               ),
-              url: "/docs/app",
+              url: "/docs/InvestAndIRA",
             },
             {
               title: "我的健康保險",
@@ -32,7 +32,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                   <BoxIcon />
                 </span>
               ),
-              url: "/docs/pages",
+              url: "/docs/HealthAndDental",
             },
             {
               title: "我的房產",
@@ -41,25 +41,25 @@ export default function Layout({ children }: { children: ReactNode }) {
                   <RocketIcon />
                 </span>
               ),
-              url: "/docs/architecture",
+              url: "/docs/HouseMaint",
             },
             {
-              title: "無三小",
+              title: "水電",
               icon: (
                 <span className="border border-fd-foreground/50 bg-gradient-to-t from-fd-foreground/30 rounded-lg p-1 text-fd-foreground">
                   <RocketIcon />
                 </span>
               ),
-              url: "/docs/community",
+              url: "/docs/HouseUtilities",
             },
             {
-              title: "本地路用",
+              title: "台灣路用",
               icon: (
                 <span className="border border-fd-foreground/50 bg-gradient-to-t from-fd-foreground/30 rounded-lg p-1 text-fd-foreground">
                   <RocketIcon />
                 </span>
               ),
-              url: "/docs/others",
+              url: "/docs/TaiwanPersonalDocs",
             },
           ],
         }}
