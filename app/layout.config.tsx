@@ -31,7 +31,7 @@ export const baseOptions: BaseLayoutProps = {
           </svg>
         </span>
       <span className="block w-px h-6 rotate-[16deg] bg-fd-border" />
-      <span className="text-sm font-semibold tracking-tight">99 cents B</span>
+      <span className="text-sm font-semibold tracking-tight">99 cents bagel</span>
       </span>
     ),
   },
@@ -42,12 +42,8 @@ export const baseOptions: BaseLayoutProps = {
       active: "nested-url",
     },
     {
-      text: "Showcase",
-      url: "https://nextjs.org/showcase",
-    },
-    {
-      text: "Blog",
-      url: "https://nextjs.org/blog",
-    },
+      text: "8ball-cam (文件狗)",
+      url: "https://8ball-cam.vercel.app",
+    }
   ],
 };
