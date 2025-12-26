@@ -5,6 +5,8 @@ import GoogleProvider from "next-auth/providers/google";
 const {
   handlers,
   auth, // <-- we’ll use this on the server to read the session
+  signIn, 
+  signOut
 } = NextAuth({
   providers: [
     GoogleProvider({
@@ -43,7 +45,7 @@ const {
   },
 });
 
-export { auth };
+export { auth, signIn, signOut };
 
 // keep your existing style for the auth route
 export const { GET, POST } = handlers;
