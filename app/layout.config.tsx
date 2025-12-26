@@ -41,6 +41,11 @@ export const baseOptions: BaseLayoutProps = {
       url: "/docs",
       active: "nested-url",
     },
+        {
+      text: "Gallery",
+      url: "/gallery",
+      active: "nested-url",
+    },
     {
       text: "8ball-cam (文件狗)",
       url: "https://8ball-cam.vercel.app",
