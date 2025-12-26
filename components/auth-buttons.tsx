@@ -12,7 +12,7 @@ export function AuthButtons({ isAuthenticated }: { isAuthenticated: boolean }) {
   }
 
   return (
-    <form action={async () => { "use server"; await signIn("google", { redirectTo: "/docs" }); }}>
+    <form action={async () => { "use server"; await signIn("google", { redirectTo: "/" }); }}>
       <button type="submit" className="rounded-full bg-fd-primary px-6 py-2.5 text-sm font-medium text-fd-primary-foreground">
         Sign in with Google
       </button>
