@@ -2,7 +2,7 @@
 import { auth } from "@/auth";
 
 const DRIVE_FOLDER_ID =
-  process.env.GOOGLE_DRIVE_FOLDER_ID ?? "1QZIlGdbY2YPBQrgdmWILdE2ITA-YtdEW";
+  process.env.DRIVE_FOLDER_ID;
 
 type DriveImage = {
   id: string;
