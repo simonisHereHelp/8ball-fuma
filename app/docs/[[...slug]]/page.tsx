@@ -1,12 +1,6 @@
-import { createMdxComponents } from "@/components/mdx";
+import { DocsContent } from "../layout";
+import { toMdxContent, type DocContent } from "@/lib/compile-doc";
 import { isLocal, source } from "@/lib/source";
-import {
-  DocsPage,
-  DocsBody,
-  DocsDescription,
-  DocsTitle,
-  DocsCategory,
-} from "fumadocs-ui/page";
 import { notFound } from "next/navigation";
 
 export const revalidate = 30; // reval every page in eg. 7200 (every 2 hours) pr = 0
@@ -18,33 +12,20 @@ export default async function Page(props: {
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
-  let content = await page.data.load();
+  let content = (await page.data.load()) as DocContent;
 
-  if (content.source) {
+  if (content.type === "mdx" && content.source) {
     const sourcePage = source.getPage(content.source.split("/"));
 
     if (!sourcePage)
       throw new Error(
         `unresolved source in frontmatter of ${page.file.path}: ${content.source}`,
       );
-    content = await sourcePage.data.load();
+    content = toMdxContent(await sourcePage.data.load());
   }
 
-  const MdxContent = content.body;
-
   return (
-    <DocsPage toc={content.toc} full={content.full}>
-      <DocsTitle>{content.title}</DocsTitle>
-      <DocsDescription>{content.description}</DocsDescription>
-      <DocsBody>
-        <MdxContent
-          components={createMdxComponents(params.slug?.[0] === "app")}
-        />
-        {page.file.name === "index" && (
-          <DocsCategory page={page} from={source} />
-        )}
-      </DocsBody>
-    </DocsPage>
+    <DocsContent content={content} page={page} slug={params.slug} />
   );
 }
 

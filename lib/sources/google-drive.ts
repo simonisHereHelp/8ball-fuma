@@ -1,8 +1,9 @@
 import type { Source, VirtualFile } from "fumadocs-core/source";
-import { compile, type CompiledPage } from "../compile-md";
+import { compile, toMdxContent, type CompiledPage } from "../compile-doc";
 import * as path from "node:path";
 import { getTitleFromFile } from "../source";
 import { meta } from "../meta";
+import type { PdfContent } from "../compile-doc";
 
 const folderId = process.env.DRIVE_FOLDER_ID_PARENT ?? "1QZIlGdbY2YPBQrgdmWILdE2ITA-YtdEW";
 const apiKey = 'AIzaSyAMpDmSFyTWB_90ZJWcBiIaXX8-1srgTew';
@@ -28,6 +29,7 @@ async function listFolder(folder: string): Promise<DriveFile[]> {
       fields: "nextPageToken, files(id, name, mimeType)",
       pageSize: "1000",
       key: apiKey,
+      supportsAllDrives: "true",
     });
 
     if (pageToken) {
@@ -85,7 +87,7 @@ async function listDocsFiles(docsFolderId: string, prefix = ""): Promise<Virtual
   const files = await listFolder(docsFolderId);
   const out: VirtualFile[] = [];
 
-  const supportedExt = new Set([".md", ".mdx", ".txt"]); // ✅ Only these appear in nav/pageTree
+  const supportedExt = new Set([".md", ".mdx", ".txt", ".pdf"]); // ✅ Only these appear in nav/pageTree
 
   for (const file of files) {
     if (file.mimeType === DRIVE_FOLDER_MIME) {
@@ -98,8 +100,7 @@ async function listDocsFiles(docsFolderId: string, prefix = ""): Promise<Virtual
     if (
       file.mimeType.startsWith("image/") ||
       file.mimeType.startsWith("video/") ||
-      file.mimeType.startsWith("audio/") ||
-      file.mimeType === "application/pdf"
+      file.mimeType.startsWith("audio/") 
     ) {
       continue;
     }
@@ -108,16 +109,28 @@ async function listDocsFiles(docsFolderId: string, prefix = ""): Promise<Virtual
     if (!supportedExt.has(ext)) continue;
 
     const filePath = prefix ? `${prefix}/${file.name}` : file.name;
+    const isPdf = file.mimeType === "application/pdf" || ext === ".pdf";
 
     out.push({
       type: "page",
       path: filePath,
       data: {
         title: getTitleFromFile(filePath),
-        async load() {
+        async load(): Promise<CompiledPage | PdfContent> {
+              if (isPdf) {
+                return {
+                  type: "pdf",
+                  url: `/api/docs/pdf/${file.id}`,
+                  title: getTitleFromFile(filePath),
+                  description: undefined,
+                  toc: [],
+                  full: true,
+                } satisfies PdfContent;
+              }
+
           const content = await fetchFileContent(file.id);
-          return compile(filePath, content);
-        },
+          return toMdxContent(await compile(filePath, content));
+          },
       },
     } satisfies VirtualFile);
   }
@@ -130,8 +143,7 @@ export async function createGoogleDriveSource(): Promise<
     metaData: { title: string; pages: string[] };
     pageData: {
       title: string;
-      load: () => Promise<CompiledPage>;
-    };
+      load: () => Promise<CompiledPage | PdfContent>;    };
   }>
 > {
   const docsFolder = await findDocsFolder();

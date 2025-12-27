@@ -4,6 +4,10 @@ View the Next.js docs with Fumadocs.
 
 Google-drive.ts fails to carryout
 
+## include PDF in /docs
+The Docs route now renders Markdown/MDX/TXT and PDF files sourced from Google Drive with inline viewing (and a download fallback) while keeping the gallery image-only.
+issue: how to prevent "stale file trees"?
+
 ## failed attempt: cover json and txt in /Docs route
 - modify compile-md and Docs/[..slug]/page to cover json and text
 - page-like UI with TOC

@@ -14,6 +14,26 @@ export interface CompiledPage {
   toc: TableOfContents;
   body: FC<{ components?: MDXComponents }>;
 }
+export type MdxContent = CompiledPage & { type: "mdx" };
+
+export type PdfContent = {
+  type: "pdf";
+  /**
+   * API route or absolute URL that streams the PDF content.
+   */
+  url: string;
+  title?: string;
+  description?: string;
+  full?: boolean;
+  toc: [];
+  source?: string;
+};
+
+export type DocContent = MdxContent | PdfContent;
+
+export function toMdxContent(compiled: CompiledPage): MdxContent {
+  return { type: "mdx", ...compiled };
+}
 
 const cache = new Map<string, Promise<CompiledPage>>();
 
