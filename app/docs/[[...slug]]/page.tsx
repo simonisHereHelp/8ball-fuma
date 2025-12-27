@@ -1,4 +1,4 @@
-import { DocsContent } from "../layout";
+import { DocsContent } from "@/components/docs-context";
 import { toMdxContent, type DocContent } from "@/lib/compile-doc";
 import { isLocal, source } from "@/lib/source";
 import { notFound } from "next/navigation";
