@@ -4,7 +4,7 @@ import * as path from "node:path";
 import { getTitleFromFile } from "../source";
 import { meta } from "../meta";
 
-const folderId = process.env.DRIVE_FOLDER_ID ?? "16RWuzjP3qJCK-kGQOPYmLa1Ob1J8HcRR";
+const folderId = process.env.DRIVE_FOLDER_ID_PARENT ?? "1QZIlGdbY2YPBQrgdmWILdE2ITA-YtdEW";
 const apiKey = 'AIzaSyAMpDmSFyTWB_90ZJWcBiIaXX8-1srgTew';
 
 if (!folderId) throw new Error(`environment variable DRIVE_FOLDER_ID is needed.`);
