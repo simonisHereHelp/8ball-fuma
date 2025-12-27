@@ -4,7 +4,7 @@ import * as path from "node:path";
 import { getTitleFromFile } from "../source";
 import { meta } from "../meta";
 
-const folderId = '1QZIlGdbY2YPBQrgdmWILdE2ITA-YtdEW';
+const folderId = process.env.DRIVE_FOLDER_ID;
 const apiKey = 'AIzaSyAMpDmSFyTWB_90ZJWcBiIaXX8-1srgTew';
 
 if (!folderId) throw new Error(`environment variable DRIVE_FOLDER_ID is needed.`);
@@ -81,12 +81,11 @@ async function findDocsFolder(): Promise<DriveFile> {
   return docs;
 }
 
-async function listDocsFiles(
-  docsFolderId: string,
-  prefix = "",
-): Promise<VirtualFile[]> {
+async function listDocsFiles(docsFolderId: string, prefix = ""): Promise<VirtualFile[]> {
   const files = await listFolder(docsFolderId);
   const out: VirtualFile[] = [];
+
+  const supportedExt = new Set([".md", ".mdx", ".txt"]); // ✅ Only these appear in nav/pageTree
 
   for (const file of files) {
     if (file.mimeType === DRIVE_FOLDER_MIME) {
@@ -95,14 +94,21 @@ async function listDocsFiles(
       continue;
     }
 
-    if (path.extname(file.name) === ".json") {
-      console.warn(
-        "We do not handle .json files at the moment, you need to hardcode them",
-      );
+    // ✅ Exclude JPEG/PNG/etc from nav
+    if (
+      file.mimeType.startsWith("image/") ||
+      file.mimeType.startsWith("video/") ||
+      file.mimeType.startsWith("audio/") ||
+      file.mimeType === "application/pdf"
+    ) {
       continue;
     }
 
+    const ext = path.extname(file.name).toLowerCase();
+    if (!supportedExt.has(ext)) continue;
+
     const filePath = prefix ? `${prefix}/${file.name}` : file.name;
+
     out.push({
       type: "page",
       path: filePath,
