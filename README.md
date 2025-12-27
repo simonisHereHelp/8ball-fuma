@@ -4,6 +4,12 @@ View the Next.js docs with Fumadocs.
 
 Google-drive.ts fails to carryout
 
+## failed attempt: cover json and txt in /Docs route
+- modify compile-md and Docs/[..slug]/page to cover json and text
+- page-like UI with TOC
+- poor json and text TOC response
+- heavy page build load upon [..slug] page path, irresponsive page load
+
 ## Authentication
 
 Add the following environment variables to enable the Google-based NextAuth flow and Drive uploads:
