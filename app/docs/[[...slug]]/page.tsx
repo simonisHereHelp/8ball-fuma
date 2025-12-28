@@ -8,6 +8,9 @@ import {
   DocsCategory,
 } from "fumadocs-ui/page";
 import { notFound } from "next/navigation";
+import type { FC } from "react";
+import type { MDXComponents } from "mdx/types";
+import { pdfBodies } from "../pdf-bodies";
 
 export const revalidate = 30; // reval every page in eg. 7200 (every 2 hours) pr = 0
 
@@ -30,16 +33,23 @@ export default async function Page(props: {
     content = await sourcePage.data.load();
   }
 
-  const MdxContent = content.body;
+    const slugKey = params.slug?.join("/") ?? "index";
+    const MdxContent = content.body;
+    const mdxComponents = createMdxComponents(params.slug?.[0] === "app");
+    const BodyRenderer: FC<{ components?: MDXComponents }> =
+      content.pdfUrl && pdfBodies[slugKey]
+        ? () => {
+            const PdfBody = pdfBodies[slugKey]!;
+            return <PdfBody url={content.pdfUrl!} />;
+          }
+        : MdxContent;
 
   return (
     <DocsPage toc={content.toc} full={content.full}>
       <DocsTitle>{content.title}</DocsTitle>
       <DocsDescription>{content.description}</DocsDescription>
       <DocsBody>
-        <MdxContent
-          components={createMdxComponents(params.slug?.[0] === "app")}
-        />
+      <BodyRenderer components={mdxComponents} />
         {page.file.name === "index" && (
           <DocsCategory page={page} from={source} />
         )}

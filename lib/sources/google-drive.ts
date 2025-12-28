@@ -1,5 +1,6 @@
 import type { Source, VirtualFile } from "fumadocs-core/source";
 import { compile, type CompiledPage } from "../compile-md";
+import { compilePdf } from "../compilePdf";
 import * as path from "node:path";
 import { getTitleFromFile } from "../source";
 import { meta } from "../meta";
@@ -68,6 +69,11 @@ async function fetchFileContent(fileId: string): Promise<string> {
   return await res.text();
 }
 
+function getFileUrl(fileId: string) {
+  return `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${apiKey}`;
+}
+
+
 async function findDocsFolder(): Promise<DriveFile> {
   const files = await listFolder(folderId);
   const docs = files.find(
@@ -85,7 +91,7 @@ async function listDocsFiles(docsFolderId: string, prefix = ""): Promise<Virtual
   const files = await listFolder(docsFolderId);
   const out: VirtualFile[] = [];
 
-  const supportedExt = new Set([".md", ".mdx", ".txt"]); // ✅ Only these appear in nav/pageTree
+  const supportedExt = new Set([".md", ".mdx", ".pdf", ".txt"]); // ✅ Only these appear in nav/pageTree
 
   for (const file of files) {
     if (file.mimeType === DRIVE_FOLDER_MIME) {
@@ -98,8 +104,7 @@ async function listDocsFiles(docsFolderId: string, prefix = ""): Promise<Virtual
     if (
       file.mimeType.startsWith("image/") ||
       file.mimeType.startsWith("video/") ||
-      file.mimeType.startsWith("audio/") ||
-      file.mimeType === "application/pdf"
+      file.mimeType.startsWith("audio/") 
     ) {
       continue;
     }
@@ -115,6 +120,14 @@ async function listDocsFiles(docsFolderId: string, prefix = ""): Promise<Virtual
       data: {
         title: getTitleFromFile(filePath),
         async load() {
+
+          if (file.mimeType === "application/pdf" || ext === ".pdf") {
+            return compilePdf(filePath, {
+              url: getFileUrl(file.id),
+              title: getTitleFromFile(filePath),
+            });
+          }
+
           const content = await fetchFileContent(file.id);
           return compile(filePath, content);
         },
