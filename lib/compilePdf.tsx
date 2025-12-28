@@ -14,29 +14,19 @@ const cache = new Map<string, Promise<CompiledPage>>();
 
 function createDefaultPdfBody(url: string): FC<{ components?: MDXComponents }> {
   const PdfBody: FC<{ components?: MDXComponents }> = () => (
-    <div className="flex flex-col gap-4">
-      <object
-        data={url}
-        type="application/pdf"
-        className="w-full min-h-[70vh] rounded-xl border border-fd-border"
-      >
-        <p className="text-sm text-muted-foreground">
-          Your browser does not support embedded PDFs. {""}
-          <a className="text-fd-primary underline" href={url} target="_blank" rel="noreferrer">
-            Open the document in a new tab
-          </a>
-          .
-        </p>
-      </object>
-      <a
-        className="text-sm text-fd-primary underline"
-        href={url}
-        target="_blank"
-        rel="noreferrer"
-      >
-        Download PDF
-      </a>
-    </div>
+    <object
+      data={url}
+      type="application/pdf"
+      className="w-full min-h-[70vh] rounded-xl border border-fd-border"
+    >
+      <p className="text-sm text-muted-foreground">
+        Your browser does not support embedded PDFs. {""}
+        <a className="text-fd-primary underline" href={url} target="_blank" rel="noreferrer">
+          Open the document in a new tab
+        </a>
+        .
+      </p>
+    </object>
   );
 
   PdfBody.displayName = "DocsPdfDefaultBody";
