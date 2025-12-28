@@ -1,6 +1,6 @@
 import type { Source, VirtualFile } from "fumadocs-core/source";
 import { Octokit } from "octokit";
-import { compile, type CompiledPage } from "../compile-md";
+import { compile, type CompiledPage } from "../compile-doc";
 import * as path from "node:path";
 import { getTitleFromFile } from "../source";
 import { meta } from "../meta";

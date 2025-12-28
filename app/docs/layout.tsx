@@ -33,34 +33,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 </span>
               ),
               url: "/docs/HealthAndDental",
-            },
-            {
-              title: "我的房產",
-              icon: (
-                <span className="border border-fd-primary/50 bg-gradient-to-t from-fd-primary/30 rounded-lg p-1 text-fd-primary">
-                  <RocketIcon />
-                </span>
-              ),
-              url: "/docs/HouseMaint",
-            },
-            {
-              title: "水電",
-              icon: (
-                <span className="border border-fd-foreground/50 bg-gradient-to-t from-fd-foreground/30 rounded-lg p-1 text-fd-foreground">
-                  <RocketIcon />
-                </span>
-              ),
-              url: "/docs/HouseUtilities",
-            },
-            {
-              title: "台灣路用",
-              icon: (
-                <span className="border border-fd-foreground/50 bg-gradient-to-t from-fd-foreground/30 rounded-lg p-1 text-fd-foreground">
-                  <RocketIcon />
-                </span>
-              ),
-              url: "/docs/TaiwanPersonalDocs",
-            },
+            }
           ],
         }}
       >
