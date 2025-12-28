@@ -1,9 +1,14 @@
 import { DocsLayout } from "fumadocs-ui/layouts/notebook";
-import type { ReactNode } from "react";
+import type { ReactNode, FC } from "react";
 import { baseOptions } from "@/app/layout.config";
 import { source } from "@/lib/source";
 import { Body } from "./layout.client";
 import { BoxIcon, RocketIcon } from "lucide-react";
+
+export type PdfBodyComponent = FC<{ url: string }>;
+
+// Add custom PDF renderers keyed by slug (e.g., "folder/file").
+export const pdfBodies: Record<string, PdfBodyComponent> = {};
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (

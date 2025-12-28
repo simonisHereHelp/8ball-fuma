@@ -10,7 +10,7 @@ export interface CompiledPage {
 
   title?: string;
   description?: string;
-
+  pdfUrl?: string;
   toc: TableOfContents;
   body: FC<{ components?: MDXComponents }>;
 }
