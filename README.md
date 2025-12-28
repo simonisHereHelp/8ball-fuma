@@ -3,6 +3,14 @@
 View the Next.js docs with Fumadocs.
 
 Google-drive.ts fails to carryout
+## PDF:
+```
+Added a cached compilePdf helper to mirror MDX compilation for PDFs, supporting optional body renderers alongside metadata. 
+
+Switched Google Drive PDF entries to load through compilePdf for a consistent page tree pipeline. 
+
+Allowed docs pages to render custom PDF body components while keeping the default viewer fallback. 
+```
 
 ## failed attempt: cover json and txt in /Docs route
 - modify compile-md and Docs/[..slug]/page to cover json and text
