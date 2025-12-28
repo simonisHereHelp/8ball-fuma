@@ -1,5 +1,5 @@
 import type { Source, VirtualFile } from "fumadocs-core/source";
-import { compile, toMdxContent, type CompiledPage } from "../compile-doc";
+import { compile, compilePdf, toMdxContent, type CompiledPage } from "../compile-doc";
 import * as path from "node:path";
 import { getTitleFromFile } from "../source";
 import { meta } from "../meta";
@@ -117,20 +117,16 @@ async function listDocsFiles(docsFolderId: string, prefix = ""): Promise<Virtual
       data: {
         title: getTitleFromFile(filePath),
         async load(): Promise<CompiledPage | PdfContent> {
-              if (isPdf) {
-                return {
-                  type: "pdf",
-                  url: `/api/docs/pdf/${file.id}`,
-                  title: getTitleFromFile(filePath),
-                  description: undefined,
-                  toc: [],
-                  full: true,
-                } satisfies PdfContent;
-              }
+          if (isPdf) {
+            return compilePdf(filePath, `/api/docs/pdf/${file.id}`, {
+              title: getTitleFromFile(filePath),
+              full: true,
+            });
+          }
 
           const content = await fetchFileContent(file.id);
           return toMdxContent(await compile(filePath, content));
-          },
+        },
       },
     } satisfies VirtualFile);
   }

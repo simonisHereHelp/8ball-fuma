@@ -22,12 +22,17 @@ export function DocsContent({
   slug?: string[];
 }) {
   if (content.type === "pdf") {
+    const PdfBody = content.body;
     return (
       <DocsPage toc={content.toc} full={content.full}>
         <DocsTitle>{content.title}</DocsTitle>
         <DocsDescription>{content.description}</DocsDescription>
         <DocsBody>
-          <PdfViewer src={content.url} title={content.title} />
+          {PdfBody ? (
+            <PdfBody />
+          ) : (
+            <PdfViewer src={content.url} title={content.title} />
+          )}
         </DocsBody>
       </DocsPage>
     );
