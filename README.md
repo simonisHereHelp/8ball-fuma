@@ -3,6 +3,18 @@
 View the Next.js docs with Fumadocs.
 
 Google-drive.ts fails to carryout
+
+## Inline Render of PDF
+```
+Source: google-drive.ts detects a .pdf and generates a "preview-friendly" link.
+
+Compiler: compilePdf.tsx creates the "Self" TOC entry and wraps the URL in a high-fidelity Viewer component.
+
+Registry: pdf-bodies.ts remains the place for specialized overrides.
+
+Renderer: page.tsx selects the PdfBody (either default or custom) and renders it within a full-screen DocsBody.
+```
+
 ## PDF:
 ```
 Added a cached compilePdf helper to mirror MDX compilation for PDFs, supporting optional body renderers alongside metadata. 
