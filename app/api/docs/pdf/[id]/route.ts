@@ -4,7 +4,11 @@ import { NextResponse, type NextRequest } from "next/server";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  req: NextRequest, 
+  { params }: { params: Promise < { id: string } > }
+) {
+  const { id } = await params;
   const session = await auth();
   const accessToken = (session as any)?.accessToken as string | undefined;
 
@@ -12,7 +16,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = params;
   const downloadUrl = new URL(`https://www.googleapis.com/drive/v3/files/${id}`);
   downloadUrl.searchParams.set("alt", "media");
   downloadUrl.searchParams.set("supportsAllDrives", "true");
