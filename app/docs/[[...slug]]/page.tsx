@@ -12,40 +12,25 @@ import { pdfBodies } from "../pdf-bodies";
 
 export const revalidate = 30;
 
-export default async function Page(props: {
-  params: Promise<{ slug?: string[] }>;
-}) {
+export default async function Page(props: { params: Promise<{ slug?: string[] }> }) {
   const params = await props.params;
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
   let content = await page.data.load();
-
-  if (content.source) {
-    const sourcePage = source.getPage(content.source.split("/"));
-    if (!sourcePage) throw new Error(`unresolved source: ${content.source}`);
-    content = await sourcePage.data.load();
-  }
-
   const slugKey = params.slug?.join("/") ?? "index";
   const mdxComponents = createMdxComponents(params.slug?.[0] === "app");
 
-  // Functional wrapper to branch between MDX and PDF rendering
-  const BodyContent = () => {
-    // 1. If it's a PDF, check for custom renderer first, then fallback to default
+  // Logic: Routing between MDX and Featured PDF Viewer
+  const BodyRenderer = () => {
     if (content.pdfUrl) {
-      const CustomPdf = pdfBodies[slugKey];
-      if (CustomPdf) {
-        return <CustomPdf url={content.pdfUrl} />;
-      }
-      // Fallback to the default iframe viewer compiled in content.body
-      const DefaultViewer = content.body;
-      return <DefaultViewer />;
+      // Use specific slug override OR fallback to the default featured viewer
+      const Viewer = pdfBodies[slugKey] || pdfBodies["default"];
+      return <Viewer url={content.pdfUrl} />;
     }
 
-    // 2. Standard MDX/MD/TXT content using provided components
-    const MdxBody = content.body;
-    return <MdxBody components={mdxComponents} />;
+    const MdxContent = content.body;
+    return <MdxContent components={mdxComponents} />;
   };
 
   return (
@@ -53,7 +38,7 @@ export default async function Page(props: {
       <DocsTitle>{content.title}</DocsTitle>
       <DocsDescription>{content.description}</DocsDescription>
       <DocsBody>
-        <BodyContent />
+        <BodyRenderer />
         {page.file.name === "index" && (
           <DocsCategory page={page} from={source} />
         )}
@@ -61,7 +46,6 @@ export default async function Page(props: {
     </DocsPage>
   );
 }
-
 export function generateStaticParams(): { slug?: string[] }[] {
   if (isLocal) return source.generateParams();
   return [];

@@ -1,13 +1,16 @@
+import dynamic from "next/dynamic";
 import type { FC } from "react";
 
 export type PdfBodyComponent = FC<{ url: string }>;
 
-/**
- * Add custom PDF renderers keyed by slug (e.g., "HealthAndDental/my-policy").
- * This allows you to use react-pdf or other libraries for specific files.
- */
+// We use dynamic loading here so the PDF client code isn't 
+// bundled into the main MDX documentation pages.
+const DefaultFeaturedViewer = dynamic(() => import("./PdfViewer.client"), {
+  ssr: false,
+  loading: () => <div className="h-[800px] animate-pulse bg-fd-muted rounded-xl" />
+});
+
 export const pdfBodies: Record<string, PdfBodyComponent> = {
-  // Example:
-  // "docs/MySpecialPdf": (props) => <MyCustomViewer url={props.url} />,
-  // "InvestAndIRA/Summary": (props) => <div className="p-4 border">Custom View: {props.url}</div>,
+  // Use 'default' as a catch-all or map specific slugs
+  "default": DefaultFeaturedViewer,
 };
