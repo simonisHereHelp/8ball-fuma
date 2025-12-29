@@ -14,3 +14,4 @@ export const pdfBodies: Record<string, PdfBodyComponent> = {
   // Use 'default' as a catch-all or map specific slugs
   "default": DefaultFeaturedViewer,
 };
+

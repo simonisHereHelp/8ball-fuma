@@ -22,29 +22,30 @@ export default async function Page(props: { params: Promise<{ slug?: string[] }>
   const mdxComponents = createMdxComponents(params.slug?.[0] === "app");
 
   // Logic: Routing between MDX and Featured PDF Viewer
-  const BodyRenderer = () => {
-    if (content.pdfUrl) {
-      // Use specific slug override OR fallback to the default featured viewer
-      const Viewer = pdfBodies[slugKey] || pdfBodies["default"];
-      return <Viewer url={content.pdfUrl} />;
-    }
+    // Updated Logic: Use the switchboard for ALL PDFs
+    const BodyRenderer = () => {
+      if (content.pdfUrl) {
+        // Check for a specific slug override, otherwise use the "default" featured viewer
+        const Viewer = pdfBodies[slugKey] || pdfBodies["default"];
+        return <Viewer url={content.pdfUrl} />;
+      }
 
-    const MdxContent = content.body;
-    return <MdxContent components={mdxComponents} />;
-  };
+      const MdxContent = content.body;
+      return <MdxContent components={mdxComponents} />;
+    };
 
-  return (
-    <DocsPage toc={content.toc} full={content.full}>
-      <DocsTitle>{content.title}</DocsTitle>
-      <DocsDescription>{content.description}</DocsDescription>
-      <DocsBody>
-        <BodyRenderer />
-        {page.file.name === "index" && (
-          <DocsCategory page={page} from={source} />
-        )}
-      </DocsBody>
-    </DocsPage>
-  );
+    return (
+      <DocsPage toc={content.toc} full={content.full}>
+        <DocsTitle>{content.title}</DocsTitle>
+        <DocsDescription>{content.description}</DocsDescription>
+        <DocsBody>
+          <BodyRenderer /> 
+          {page.file.name === "index" && (
+            <DocsCategory page={page} from={source} />
+          )}
+        </DocsBody>
+      </DocsPage>
+    );
 }
 export function generateStaticParams(): { slug?: string[] }[] {
   if (isLocal) return source.generateParams();
