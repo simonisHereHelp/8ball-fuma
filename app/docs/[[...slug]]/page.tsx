@@ -8,11 +8,9 @@ import {
   DocsCategory,
 } from "fumadocs-ui/page";
 import { notFound } from "next/navigation";
-import type { FC } from "react";
-import type { MDXComponents } from "mdx/types";
 import { pdfBodies } from "../pdf-bodies";
 
-export const revalidate = 30; // reval every page in eg. 7200 (every 2 hours) pr = 0
+export const revalidate = 30;
 
 export default async function Page(props: {
   params: Promise<{ slug?: string[] }>;
@@ -25,31 +23,37 @@ export default async function Page(props: {
 
   if (content.source) {
     const sourcePage = source.getPage(content.source.split("/"));
-
-    if (!sourcePage)
-      throw new Error(
-        `unresolved source in frontmatter of ${page.file.path}: ${content.source}`,
-      );
+    if (!sourcePage) throw new Error(`unresolved source: ${content.source}`);
     content = await sourcePage.data.load();
   }
 
-    const slugKey = params.slug?.join("/") ?? "index";
-    const MdxContent = content.body;
-    const mdxComponents = createMdxComponents(params.slug?.[0] === "app");
-    const BodyRenderer: FC<{ components?: MDXComponents }> =
-      content.pdfUrl && pdfBodies[slugKey]
-        ? () => {
-            const PdfBody = pdfBodies[slugKey]!;
-            return <PdfBody url={content.pdfUrl!} />;
-          }
-        : MdxContent;
+  const slugKey = params.slug?.join("/") ?? "index";
+  const mdxComponents = createMdxComponents(params.slug?.[0] === "app");
+
+  // Functional wrapper to branch between MDX and PDF rendering
+  const BodyContent = () => {
+    // 1. If it's a PDF, check for custom renderer first, then fallback to default
+    if (content.pdfUrl) {
+      const CustomPdf = pdfBodies[slugKey];
+      if (CustomPdf) {
+        return <CustomPdf url={content.pdfUrl} />;
+      }
+      // Fallback to the default iframe viewer compiled in content.body
+      const DefaultViewer = content.body;
+      return <DefaultViewer />;
+    }
+
+    // 2. Standard MDX/MD/TXT content using provided components
+    const MdxBody = content.body;
+    return <MdxBody components={mdxComponents} />;
+  };
 
   return (
     <DocsPage toc={content.toc} full={content.full}>
       <DocsTitle>{content.title}</DocsTitle>
       <DocsDescription>{content.description}</DocsDescription>
       <DocsBody>
-      <BodyRenderer components={mdxComponents} />
+        <BodyContent />
         {page.file.name === "index" && (
           <DocsCategory page={page} from={source} />
         )}
@@ -70,7 +74,5 @@ export async function generateMetadata(props: {
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
-  return {
-    title: page.data.title,
-  };
+  return { title: page.data.title };
 }
