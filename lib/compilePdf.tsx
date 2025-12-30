@@ -6,13 +6,14 @@ export interface CompilePdfOptions {
   url: string;
   title?: string;
   description?: string;
+  downloadUrl?: string; // Add this for the API link
 }
 
 const cache = new Map<string, Promise<CompiledPage>>();
 
 export async function compilePdf(
   filePath: string,
-  { url, title, description }: CompilePdfOptions,
+  { url, title, description, downloadUrl }: CompilePdfOptions,
 ): Promise<CompiledPage> {
   const key = `pdf|${filePath}|${url}`;
   const cached = cache.get(key);
@@ -25,6 +26,7 @@ export async function compilePdf(
     description,
     full: true,
     pdfUrl: url,
+    downloadUrl: downloadUrl, // Store this in the page data
     title,
     toc: [],
   });

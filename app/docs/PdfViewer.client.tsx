@@ -28,49 +28,18 @@ const DynamicEngine = dynamic(() => Promise.resolve(PdfViewerImpl), {
 function PdfViewerImpl({ url }: PdfViewerProps) {
   const [isLoading, setIsLoading] = useState(true);
 
-  // Auto-convert standard Drive URLs to Preview URLs if necessary
-  const previewUrl = url.includes("/preview") 
-    ? url 
-    : url.replace(/\/view.*$/, "/preview") + "#view=FitH";
-
+  // We no longer need complex regex because google-drive.ts provides the correct link
   return (
-    <div className="flex flex-col w-full h-[800px] rounded-xl overflow-hidden border border-fd-border bg-fd-card shadow-sm">
-      {/* Featured Toolbar Shell */}
-      <div className="flex items-center justify-between p-3 border-b bg-fd-muted/50 text-xs transition-colors">
-        <div className="flex items-center gap-3 px-2">
-          <div className={`w-2 h-2 rounded-full ${isLoading ? 'bg-amber-400 animate-pulse' : 'bg-green-500'}`} />
-          <span className="font-medium text-fd-muted-foreground">
-            {isLoading ? "Connecting to Google Drive..." : "Document Preview Mode"}
-          </span>
-        </div>
-        <div className="flex gap-2">
-           <a 
-            href={url} 
-            target="_blank" 
-            rel="noreferrer"
-            className="px-4 py-1.5 rounded-lg bg-fd-primary text-fd-primary-foreground text-[11px] font-semibold hover:opacity-90 transition-opacity"
-          >
-            Download PDF
-          </a>
-        </div>
-      </div>
-
+    <div className="flex flex-col w-full h-[800px] ...">
+      {/* ... Toolbar UI ... */}
       <div className="relative flex-1 bg-fd-background">
         <iframe
-          src={previewUrl}
-          className={`w-full h-full transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+          src={url} // This is now a drive.google.com/file/d/.../preview link
+          className={`w-full h-full ${isLoading ? 'opacity-0' : 'opacity-100'}`}
           onLoad={() => setIsLoading(false)}
           allow="autoplay"
         />
-        
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-fd-card/50 backdrop-blur-sm">
-             <div className="flex flex-col items-center gap-2">
-                <div className="w-6 h-6 border-2 border-fd-primary border-t-transparent rounded-full animate-spin" />
-                <p className="text-[10px] uppercase tracking-widest text-fd-muted-foreground">Buffering</p>
-             </div>
-          </div>
-        )}
+        {/* Buffering Spinner will now hide once the /preview page loads */}
       </div>
     </div>
   );
