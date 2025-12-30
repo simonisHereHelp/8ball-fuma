@@ -63,9 +63,9 @@ export async function generateMetadata(props: {
   const params = await props.params;
   const page = source.getPage(params.slug);
   if (!page) notFound();
-
+  const content = await page.data.load();
   return { 
     title: page.data.title,
-    description: page.data.description 
+    description: content.description // Accessing from content, not page.data
   };
 }
