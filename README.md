@@ -4,6 +4,16 @@ View the Next.js docs with Fumadocs.
 
 Google-drive.ts fails to carryout
 
+## Key PDF flow
+```
+client side: Google Drive links to /preview endpoints for reliable iframe embeddin
+next/dynamic: prevent SSR confligcts and greenlight to browser load
+Dual UI: in-page view (preview) and Open in Drive (hi def downdload view) 
+```
+
+### compilePage vs compilePdf
+![alt text](./README_/PdfvsPage.png)
+
 ## (future path) turning from file-typ routing to metadata routing
 
 Implement "Page Intent" Metadata: Transition from file-type detection to a metadata-driven approach (e.g., type: "gallery" or type: "bi") to explicitly signal which renderer to use.
