@@ -70,8 +70,8 @@ async function fetchFileContent(fileId: string): Promise<string> {
 }
 
 // Add this helper to generate a URL that Google allows to be iframed
-function getEmbedUrl(fileId: string) {
-  return `https://drive.google.com/file/d/${fileId}/preview`;
+function getDriveViewUrl(fileId: string) {
+  return `https://drive.google.com/file/d/${fileId}/view`;
 }
 
 function getFileUrl(fileId: string) {
@@ -128,9 +128,8 @@ async function listDocsFiles(docsFolderId: string, prefix = ""): Promise<Virtual
 
           if (file.mimeType === "application/pdf" || ext === ".pdf") {
             return compilePdf(filePath, {
-              url: getEmbedUrl(file.id),
+              url: getDriveViewUrl(file.id),
               title: getTitleFromFile(filePath),
-              downloadUrl: getFileUrl(file.id)
             });
           }
 
