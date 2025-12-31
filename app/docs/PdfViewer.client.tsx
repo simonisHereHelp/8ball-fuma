@@ -5,6 +5,7 @@ import { useState, type FC } from "react";
 
 interface PdfViewerProps {
   url: string;
+  downloadUrl?: string;
 }
 
 /**
@@ -24,7 +25,7 @@ const DynamicEngine = dynamic(() => Promise.resolve(PdfViewerImpl), {
  * 2. THE IMPLEMENTATION (Internal)
  * Derived from your specific syntax requirements.
  */
-function PdfViewerImpl({ url }: PdfViewerProps) {
+function PdfViewerImpl({ url, downloadUrl }: PdfViewerProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   // Workflow 1: The Iframe Source (Internal transformation to break the buffering loop)
@@ -44,8 +45,8 @@ function PdfViewerImpl({ url }: PdfViewerProps) {
           </span>
         </div>
         <div className="flex gap-2">
-           <a 
-            href={url} // Workflow 2: Uses the original link for the "Open in Drive" / Download action.
+           <a
+            href={downloadUrl ?? url} // Workflow 2: Uses the original link for the "Open in Drive" / Download action.
             target="_blank" 
             rel="noreferrer"
             className="px-4 py-1.5 rounded-lg bg-fd-primary text-fd-primary-foreground text-[11px] font-semibold hover:opacity-90 transition-opacity"
@@ -80,8 +81,8 @@ function PdfViewerImpl({ url }: PdfViewerProps) {
  * 3. THE EXPORTED COMPONENT (FC)
  * This matches the FC type perfectly for pdf-bodies.tsx.
  */
-export const PdfViewer: FC<PdfViewerProps> = ({ url }) => {
-  return <DynamicEngine url={url} />;
+export const PdfViewer: FC<PdfViewerProps> = ({ url, downloadUrl }) => {
+  return <DynamicEngine url={url} downloadUrl={downloadUrl} />;
 };
 
 export default PdfViewer;

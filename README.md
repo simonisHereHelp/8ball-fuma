@@ -60,21 +60,21 @@ Allowed docs pages to render custom PDF body components while keeping the defaul
 
 ## Authentication
 
-Add the following environment variables to enable the Google-based NextAuth flow and Drive uploads:
+Add the following environment variables to enable the Google-based NextAuth flow for Drive-backed docs:
 
 ```
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
 - `AUTH_SECRET`
-- `GOOGLE_DRIVE_UPLOAD_FOLDER_ID` (optional – defaults to the Drive folder used for docs)
+- `DRIVE_FOLDER_ID` (the folder that stores the docs)
 ```
 
-Once configured, `/api/auth/[...nextauth]` will persist sessions and expose Drive-scoped access tokens to the app.
+Once configured, `/api/auth/[...nextauth]` will persist sessions and expose the Drive-scoped token as both `session.AccessToken` and `session.accessToken` for server-side content loading.
 
 ## Why the TOC/page tree is stale (shows deleted folders)
 
 1) fetch(..., { cache: "force-cache" }), which tells Next/Vercel to cache 
-【lib/sources/google-drive.ts】
+【lib/drive/google-drive.ts】
 
  ```
   fetch calls to cache: "no-store" or set next: { revalidate: 0 }, which forces fresh

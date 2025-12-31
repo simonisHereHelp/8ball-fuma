@@ -1,7 +1,7 @@
 import { loader } from "fumadocs-core/source";
 import * as path from "node:path";
 import { createGitHubSource } from "./sources/github";
-import { createGoogleDriveSource } from "./sources/google-drive";
+import { createGoogleDriveSource } from "./drive/google-drive";
 import { createLocalSource } from "./sources/local";
 
 const FileNameRegex = /^\d\d-(.+)$/;

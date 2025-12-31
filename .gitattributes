@@ -1,0 +1,5 @@
+# Exclude generated download archives from further exports
+downloads/ export-ignore
+
+# Ignore common noise from archives
+*.log export-ignore
