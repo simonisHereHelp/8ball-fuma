@@ -38,8 +38,8 @@ export async function fetchBlob(url: string): Promise<string> {
 }
 
 export const sharedConfig = {
-  owner: "vercel",
-  repo: "next.js",
+  owner: "simonisHereHelp",
+  repo: "mapron_booth",
 };
 
 /**
