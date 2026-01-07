@@ -1,12 +1,6 @@
 import { createMdxComponents } from "@/components/mdx";
 import { isLocal, source } from "@/lib/source";
-import {
-  DocsPage,
-  DocsBody,
-  DocsDescription,
-  DocsTitle,
-  DocsCategory,
-} from "fumadocs-ui/page";
+import { DocsPage, DocsBody, DocsTitle } from "fumadocs-ui/page";
 import { notFound } from "next/navigation";
 
 export const revalidate = 7200;
@@ -35,14 +29,10 @@ export default async function Page(props: {
   return (
     <DocsPage toc={content.toc} full={content.full}>
       <DocsTitle>{content.title}</DocsTitle>
-      <DocsDescription>{content.description}</DocsDescription>
       <DocsBody>
         <MdxContent
           components={createMdxComponents(params.slug?.[0] === "app")}
         />
-        {page.file.name === "index" && (
-          <DocsCategory page={page} from={source} />
-        )}
       </DocsBody>
     </DocsPage>
   );
