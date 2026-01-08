@@ -4,7 +4,7 @@ export const meta: VirtualFile[] = [
   {
     type: "meta",
     data: {
-      title: "App Router",
+      title: "99c Bagel",
       root: true,
       pages: [
         "[Overview](/docs/app)",
