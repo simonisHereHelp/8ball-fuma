@@ -1,5 +1,5 @@
 import { createMdxComponents } from "@/components/mdx";
-import { isLocal, source } from "@/lib/source";
+import { getSource, isLocal } from "@/lib/source";
 import {
   DocsPage,
   DocsBody,
@@ -10,18 +10,20 @@ import {
 import { notFound } from "next/navigation";
 
 export const revalidate = 7200;
+export const dynamic = "force-dynamic";
 
 export default async function Page(props: {
   params: Promise<{ slug?: string[] }>;
 }) {
+  const docsSource = await getSource();
   const params = await props.params;
-  const page = source.getPage(params.slug);
+  const page = docsSource.getPage(params.slug);
   if (!page) notFound();
 
   let content = await page.data.load();
 
   if (content.source) {
-    const sourcePage = source.getPage(content.source.split("/"));
+    const sourcePage = docsSource.getPage(content.source.split("/"));
 
     if (!sourcePage)
       throw new Error(
@@ -41,23 +43,25 @@ export default async function Page(props: {
           components={createMdxComponents(params.slug?.[0] === "app")}
         />
         {page.file.name === "index" && (
-          <DocsCategory page={page} from={source} />
+          <DocsCategory page={page} from={docsSource} />
         )}
       </DocsBody>
     </DocsPage>
   );
 }
 
-export function generateStaticParams(): { slug?: string[] }[] {
-  if (isLocal) return source.generateParams();
-  return [];
+export async function generateStaticParams(): Promise<{ slug?: string[] }[]> {
+  if (!isLocal) return [];
+  const docsSource = await getSource();
+  return docsSource.generateParams();
 }
 
 export async function generateMetadata(props: {
   params: Promise<{ slug?: string[] }>;
 }) {
+  const docsSource = await getSource();
   const params = await props.params;
-  const page = source.getPage(params.slug);
+  const page = docsSource.getPage(params.slug);
   if (!page) notFound();
 
   return {
