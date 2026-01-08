@@ -1,14 +1,12 @@
 import { DocsLayout } from "fumadocs-ui/layouts/notebook";
 import type { ReactNode } from "react";
-import { getSource } from "@/lib/source";
 import { baseOptions } from "@/app/docs/base-options";
+import { getSource } from "@/lib/source";
 import { Body } from "./layout.client";
-import { BoxIcon } from "lucide-react";
+import { BoxIcon, RocketIcon } from "lucide-react";
 
 export default async function Layout({ children }: { children: ReactNode }) {
-  console.info("[docs-layout] Building docs layout.");
   const source = await getSource();
-  console.info("[docs-layout] Loaded source for page tree.");
   return (
     <Body>
       <DocsLayout
@@ -18,24 +16,42 @@ export default async function Layout({ children }: { children: ReactNode }) {
           prefetch: false,
           tabs: [
             {
-              title: "Bagel Docs",
-              description: "documentation systm",
+              title: "App Router",
+              description: "Features available in /app",
               icon: (
                 <span className="border border-blue-600/50 bg-gradient-to-t from-blue-600/30 rounded-lg p-1 text-blue-600">
                   <BoxIcon />
                 </span>
               ),
-              url: "/docs/pages",
+              url: "/docs/app",
             },
             {
-              title: "Page 2",
+              title: "Pages Router",
               description: "Features available in /pages",
               icon: (
                 <span className="border purple-blue-600/50 bg-gradient-to-t from-purple-600/30 rounded-lg p-1 text-purple-600">
                   <BoxIcon />
                 </span>
               ),
-              url: "/docs/gallery",
+              url: "/docs/pages",
+            },
+            {
+              title: "Architecture",
+              icon: (
+                <span className="border border-fd-primary/50 bg-gradient-to-t from-fd-primary/30 rounded-lg p-1 text-fd-primary">
+                  <RocketIcon />
+                </span>
+              ),
+              url: "/docs/architecture",
+            },
+            {
+              title: "Community",
+              icon: (
+                <span className="border border-fd-foreground/50 bg-gradient-to-t from-fd-foreground/30 rounded-lg p-1 text-fd-foreground">
+                  <RocketIcon />
+                </span>
+              ),
+              url: "/docs/community",
             },
           ],
         }}
