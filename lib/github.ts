@@ -39,7 +39,7 @@ export async function fetchBlob(url: string): Promise<string> {
 
 export const sharedConfig = {
   owner: "simonisHereHelp",
-  repo: "mapron_booth",
+  repo: "8ball-fuma2b",
 };
 
 /**
