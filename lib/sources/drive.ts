@@ -26,9 +26,7 @@ function getAccessToken(session: unknown) {
     (session as { AccessToken?: string; accessToken?: string })?.accessToken;
 
   if (!token) {
-    throw new Error(
-      "Drive access requires a signed-in session with session.AccessToken",
-    );
+    return null;
   }
 
   return token;
@@ -113,6 +111,12 @@ export async function createDriveSource(): Promise<
 
   if (!rootId) {
     throw new Error("DRIVE_FOLDER_ID environment variable is required.");
+  }
+
+  if (!accessToken) {
+    return {
+      files: [...meta],
+    };
   }
 
   const pages: VirtualFile[] = [];
