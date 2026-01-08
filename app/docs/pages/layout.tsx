@@ -1,6 +1,6 @@
 import { DocsLayout } from "fumadocs-ui/layouts/notebook";
 import type { ReactNode } from "react";
-import { baseOptions } from "@/app/layout.config";
+import { baseOptions } from "@/app/docs/base-options";
 import { source } from "@/lib/source";
 import { Body } from "./layout.client";
 import { BoxIcon, RocketIcon } from "lucide-react";
