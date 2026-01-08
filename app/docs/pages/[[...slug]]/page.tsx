@@ -1,12 +1,6 @@
 import { createMdxComponents } from "@/components/mdx";
 import { getSource, isLocal } from "@/lib/source";
-import {
-  DocsPage,
-  DocsBody,
-  DocsDescription,
-  DocsTitle,
-  DocsCategory,
-} from "fumadocs-ui/page";
+import { DocsPage, DocsBody, DocsTitle } from "fumadocs-ui/page";
 import { notFound } from "next/navigation";
 
 export const revalidate = 7200;
@@ -14,12 +8,15 @@ export const revalidate = 7200;
 export default async function Page(props: {
   params: Promise<{ slug?: string[] }>;
 }) {
-  const source = await getSource();
   const params = await props.params;
+  console.info("[docs-page] Rendering docs page.", params.slug);
+  const source = await getSource();
+  console.info("[docs-page] Loaded source for request.");
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
   let content = await page.data.load();
+  console.info("[docs-page] Loaded page content.", page.file.path);
 
   if (content.source) {
     const sourcePage = source.getPage(content.source.split("/"));
@@ -29,6 +26,7 @@ export default async function Page(props: {
         `unresolved source in frontmatter of ${page.file.path}: ${content.source}`,
       );
     content = await sourcePage.data.load();
+    console.info("[docs-page] Loaded source content.", sourcePage.file.path);
   }
 
   const MdxContent = content.body;
@@ -36,30 +34,28 @@ export default async function Page(props: {
   return (
     <DocsPage toc={content.toc} full={content.full}>
       <DocsTitle>{content.title}</DocsTitle>
-      <DocsDescription>{content.description}</DocsDescription>
       <DocsBody>
         <MdxContent
           components={createMdxComponents(params.slug?.[0] === "app")}
         />
-        {page.file.name === "index" && (
-          <DocsCategory page={page} from={source} />
-        )}
       </DocsBody>
     </DocsPage>
   );
 }
 
 export async function generateStaticParams(): Promise<{ slug?: string[] }[]> {
-  if (!isLocal) return [];
-  const source = await getSource();
-  return source.generateParams();
+  if (isLocal) {
+    const source = await getSource();
+    return source.generateParams();
+  }
+  return [];
 }
 
 export async function generateMetadata(props: {
   params: Promise<{ slug?: string[] }>;
 }) {
-  const source = await getSource();
   const params = await props.params;
+  const source = await getSource();
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
