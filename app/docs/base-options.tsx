@@ -50,9 +50,13 @@ export const baseOptions: BaseLayoutProps = {
   },
   links: [
     {
-      text: "Documentation",
+      text: "Bagel Docs",
       url: "/docs/pages",
       active: "nested-url",
+    },
+    {
+      text: "Page 2",
+      url: "/docs/pages?page=2",
     },
   ],
 };

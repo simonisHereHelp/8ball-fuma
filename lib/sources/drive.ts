@@ -123,6 +123,7 @@ export async function createDriveSource(): Promise<
   }
 
   const pages: VirtualFile[] = [];
+  const folderMeta: VirtualFile[] = [];
 
   for (const folderName of folderNames) {
     console.info(`[drive] Loading folder: ${folderName}`);
@@ -131,6 +132,16 @@ export async function createDriveSource(): Promise<
       console.error(`[drive] Folder not found: ${folderName}`);
       throw new Error(`Drive folder not found: ${folderName}`);
     }
+
+    folderMeta.push({
+      type: "meta",
+      path: `${folderName}/meta.json`,
+      data: {
+        title: folderName,
+        root: true,
+        pages: ["index", "..."],
+      },
+    });
 
     const files = await listFilesInFolder(folder.id, accessToken);
     console.info(
@@ -162,6 +173,6 @@ export async function createDriveSource(): Promise<
 
   console.info(`[drive] Completed source with ${pages.length} pages.`);
   return {
-    files: [...pages, ...meta],
+    files: [...pages, ...folderMeta, ...meta],
   };
 }
