@@ -1,5 +1,5 @@
 import { createMdxComponents } from "@/components/mdx";
-import { getSource, isLocal } from "@/lib/source";
+import { getSource, isLocal, normalizeSlugSegments } from "@/lib/source";
 import {
   DocsPage,
   DocsBody,
@@ -18,7 +18,8 @@ export default async function Page(props: {
 }) {
   const docsSource = await getSource();
   const params = await props.params;
-  const page = docsSource.getPage(params.slug);
+  const slug = normalizeSlugSegments(params.slug);
+  const page = docsSource.getPage(slug);
   if (!page) {
     if (!params.slug) {
       const pages = docsSource.getPages();
@@ -90,7 +91,8 @@ export async function generateMetadata(props: {
 }) {
   const docsSource = await getSource();
   const params = await props.params;
-  const page = docsSource.getPage(params.slug);
+  const slug = normalizeSlugSegments(params.slug);
+  const page = docsSource.getPage(slug);
   if (!page) {
     if (!params.slug) {
       return {
