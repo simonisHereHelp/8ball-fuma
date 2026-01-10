@@ -95,17 +95,23 @@ export default async function Page(props: {
   }
 
   const MdxContent = content.body;
-  const navigationItems = collectNavItems(docsSource.pageTree.children);
-  const totalItems = navigationItems.length;
-  const currentIndex = navigationItems.findIndex((item) => item.url === page.url);
+  const pageTreeItems = collectNavItems(docsSource.pageTree.children);
+  const totalItems = pageTreeItems.length;
+  const currentIndex = pageTreeItems.findIndex((item) => item.url === page.url);
   const previousIndex =
-    currentIndex > 0 ? currentIndex - 1 : totalItems > 0 ? totalItems - 1 : -1;
-  const nextIndex =
-    currentIndex >= 0
-      ? (currentIndex + 1) % Math.max(totalItems, 1)
+    totalItems > 0 && currentIndex >= 0
+      ? currentIndex - 1 < 0
+        ? totalItems - 1
+        : currentIndex - 1
       : -1;
-  const previous = previousIndex >= 0 ? navigationItems[previousIndex] : undefined;
-  const next = nextIndex >= 0 ? navigationItems[nextIndex] : undefined;
+  const nextIndex =
+    totalItems > 0 && currentIndex >= 0
+      ? currentIndex + 1 >= totalItems
+        ? 0
+        : currentIndex + 1
+      : -1;
+  const previous = previousIndex >= 0 ? pageTreeItems[previousIndex] : undefined;
+  const next = nextIndex >= 0 ? pageTreeItems[nextIndex] : undefined;
 
   return (
     <DocsPage
