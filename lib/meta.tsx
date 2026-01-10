@@ -3,20 +3,22 @@ import type { ComponentPropsWithoutRef } from "react";
 
 type BagelLogoProps = ComponentPropsWithoutRef<"svg">;
 
-export const driveCategories = [
-  "AutosAndInsurance",
-  "BanksAndCards",
-  "HealthAndDental",
-  "HouseMaint",
-  "HousePatio",
-  "HouseUtilities",
-  "InvestAndIRA",
-  "SSAndMedicare",
-  "TaiwanHouse",
-  "TaiwanPersonalDocs",
-  "TaxDocs",
-  "Z-others",
+export const driveOrder = [
+  { type: "folder", name: "AutosAndInsurance" },
+  { type: "folder", name: "BanksAndCards" },
+  { type: "folder", name: "HealthAndDental" },
+  { type: "folder", name: "HouseMaint" },
+  { type: "folder", name: "HousePatio" },
+  { type: "folder", name: "HouseUtilities" },
+  { type: "folder", name: "InvestAndIRA" },
+  { type: "folder", name: "SSAndMedicare" },
+  { type: "folder", name: "TaiwanHouse" },
+  { type: "folder", name: "TaiwanPersonalDocs" },
+  { type: "folder", name: "TaxDocs" },
+  { type: "folder", name: "Z-others" },
 ] as const;
+
+export const driveCategories = driveOrder.map((entry) => entry.name);
 
 export const BagelLogo = ({ className, ...props }: BagelLogoProps) => {
   const svgClassName = `overflow-visible ${className ?? "size-12"}`;

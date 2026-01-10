@@ -84,6 +84,7 @@ export async function createDriveSource(): Promise<
     pageData: {
       title: string;
       load: () => Promise<CompiledPage>;
+      pageTreeNo?: number;
     };
   }>
 > {
@@ -106,6 +107,7 @@ export async function createDriveSource(): Promise<
 
   const pages: VirtualFile[] = [];
   const folderMeta: VirtualFile[] = [];
+  let pageTreeNo = 0;
 
   for (const folderName of folderNames) {
     console.info(`[drive] Loading folder: ${folderName}`);
@@ -142,6 +144,7 @@ export async function createDriveSource(): Promise<
         path: virtualPath,
         data: {
           title: getTitleFromFile(virtualPath),
+          pageTreeNo: pageTreeNo++,
           async load() {
             console.info(`[drive] Loading file: ${virtualPath}`);
             const content = await fetchFileContent(file.id, accessToken);
