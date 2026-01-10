@@ -3,6 +3,21 @@ import type { ComponentPropsWithoutRef } from "react";
 
 type BagelLogoProps = ComponentPropsWithoutRef<"svg">;
 
+export const driveCategories = [
+  "AutosAndInsurance",
+  "BanksAndCards",
+  "HealthAndDental",
+  "HouseMaint",
+  "HousePatio",
+  "HouseUtilities",
+  "InvestAndIRA",
+  "SSAndMedicare",
+  "TaiwanHouse",
+  "TaiwanPersonalDocs",
+  "TaxDocs",
+  "Z-others",
+] as const;
+
 export const BagelLogo = ({ className, ...props }: BagelLogoProps) => {
   const svgClassName = `overflow-visible ${className ?? "size-12"}`;
 
@@ -58,20 +73,7 @@ export const meta: VirtualFile[] = [
     data: {
       title: "99c Bagel",
       root: true,
-      pages: [
-        "...AutosAndInsurance",
-        "...BanksAndCards",
-        "...HealthAndDental",
-        "...HouseMaint",
-        "...HousePatio",
-        "...HouseUtilities",
-        "...InvestAndIRA",
-        "...SSAndMedicare",
-        "...TaiwanHouse",
-        "...TaiwanPersonalDocs",
-        "...TaxDocs",
-        "...Z-others",
-      ],
+      pages: driveCategories.map((category) => `...${category}`),
     },
     path: "canary",
   },

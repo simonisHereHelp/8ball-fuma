@@ -1,23 +1,10 @@
 import type { Source, VirtualFile } from "fumadocs-core/source";
 import { compile, type CompiledPage } from "../compile-md";
 import { getTitleFromFile } from "../source";
-import { meta } from "../meta";
+import { driveCategories, meta } from "../meta";
 import { auth, getAccessToken } from "@/auth";
 
-const folderNames = [
-  "AutosAndInsurance",
-  "BanksAndCards",
-  "HealthAndDental",
-  "HouseMaint",
-  "HousePatio",
-  "HouseUtilities",
-  "InvestAndIRA",
-  "SSAndMedicare",
-  "TaiwanHouse",
-  "TaiwanPersonalDocs",
-  "TaxDocs",
-  "Z-others",
-];
+const folderNames = [...driveCategories];
 
 const driveBaseUrl = "https://www.googleapis.com/drive/v3/files";
 
