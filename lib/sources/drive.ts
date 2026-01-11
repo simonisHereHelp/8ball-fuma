@@ -62,6 +62,16 @@ function isSupportedDoc(name: string) {
   return lower.endsWith(".md") || lower.endsWith(".mdx") || lower.endsWith(".txt");
 }
 
+function orderFilesForTree(files: DriveFile[]) {
+  const indexFiles = files.filter((file) =>
+    /^index\.(md|mdx|txt)$/i.test(file.name),
+  );
+  const otherFiles = files.filter(
+    (file) => !/^index\.(md|mdx|txt)$/i.test(file.name),
+  );
+  return [...indexFiles, ...otherFiles];
+}
+
 async function fetchFileContent(fileId: string, accessToken: string) {
   const url = `${driveBaseUrl}/${fileId}?alt=media`;
   const res = await fetch(url, {
@@ -127,7 +137,9 @@ export async function createDriveSource(): Promise<
       },
     });
 
-    const files = await listFilesInFolder(folder.id, accessToken);
+    const files = orderFilesForTree(
+      await listFilesInFolder(folder.id, accessToken),
+    );
     console.info(
       `[drive] Found ${files.length} files in ${folderName}.`,
     );
