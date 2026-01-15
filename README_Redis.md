@@ -121,3 +121,59 @@ Even for a personal vault with low traffic, **use the Redis-d approach**.
 1. **User Experience:** It turns a 2-second "spinning wheel" page load into a sub-500ms "instant" feel.
 2. **Resilience:** If Google Drive's search index lags (which happens frequently where a newly uploaded file doesn't show up in `list` results for a few seconds), the Redis manifest acts as a bridge to ensure the file is accessible immediately via its ID.
 3. **Cost:** At 500 loads/day, Upstash Redis will remain **100% Free** (well under their 10k/day limit), and you'll save on Vercel's serverless execution minutes.
+
+
+## upstash goal: Drive file Ids to skip search/list calls
+
+redisClient.
+```
+import { Redis } from "@upstash/redis";
+
+export const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+```
+
+mainfestCache.ts
+```
+import { redis } from "./redisClient";
+
+export type Manifest = {
+  jsonId: string;
+  imageIds: string[];
+  updatedAt: number;
+};
+
+export async function getManifest(basename: string): Promise<Manifest | null> {
+  return (await redis.get<Manifest>(`manifest:${basename}`)) ?? null;
+}
+
+export async function setManifest(basename: string, manifest: Manifest) {
+  await redis.set(`manifest:${basename}`, manifest, { ex: 60 * 60 }); // 1h TTL
+}
+
+```
+
+driveLoader.ts
+```
+import { getManifest, setManifest } from "./manifestCache";
+
+async function buildManifestFromDrive(basename: string, token: string) {
+  // 1) Drive list/search by basename
+  // 2) Extract jsonId + imageIds
+  // (Pseudo implementation)
+  return { jsonId: "abc", imageIds: ["id1", "id2"], updatedAt: Date.now() };
+}
+
+export async function getBundle(basename: string, token: string) {
+  let manifest = await getManifest(basename);
+  if (!manifest) {
+    manifest = await buildManifestFromDrive(basename, token);
+    await setManifest(basename, manifest);
+  }
+
+  // Direct Drive fetch by ID using manifest
+  // return bundle data...
+}
+```
