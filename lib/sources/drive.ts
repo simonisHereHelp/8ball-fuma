@@ -3,73 +3,19 @@ import { compile, type CompiledPage } from "../compile-md";
 import { getTitleFromFile } from "../source";
 import { driveCategories, meta } from "../meta";
 import { auth, getAccessToken } from "@/auth";
+import { getDriveManifest } from "@/lib/drive/manifest";
 
 const folderNames = [...driveCategories];
 
 const driveBaseUrl = "https://www.googleapis.com/drive/v3/files";
-
-type DriveFile = {
-  id: string;
+type ManifestFile = {
   name: string;
-  mimeType?: string;
+  mime: string;
 };
-
-async function driveFetch<T>(url: string, accessToken: string): Promise<T> {
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    next: { revalidate: 30 },
-  });
-
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
-
-  return (await res.json()) as T;
-}
-
-async function listFolderByName(
-  rootId: string,
-  name: string,
-  accessToken: string,
-) {
-  const params = new URLSearchParams({
-    q: `'${rootId}' in parents and mimeType = 'application/vnd.google-apps.folder' and name = '${name}' and trashed = false`,
-    fields: "files(id,name)",
-    pageSize: "1",
-  });
-
-  const url = `${driveBaseUrl}?${params.toString()}`;
-  const data = await driveFetch<{ files: DriveFile[] }>(url, accessToken);
-  return data.files[0];
-}
-
-async function listFilesInFolder(folderId: string, accessToken: string) {
-  const params = new URLSearchParams({
-    q: `'${folderId}' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false`,
-    fields: "files(id,name,mimeType)",
-    pageSize: "1000",
-  });
-
-  const url = `${driveBaseUrl}?${params.toString()}`;
-  const data = await driveFetch<{ files: DriveFile[] }>(url, accessToken);
-  return data.files;
-}
 
 function isSupportedDoc(name: string) {
   const lower = name.toLowerCase();
   return lower.endsWith(".md") || lower.endsWith(".mdx") || lower.endsWith(".txt");
-}
-
-function orderFilesForTree(files: DriveFile[]) {
-  const indexFiles = files.filter((file) =>
-    /^index\.(md|mdx|txt)$/i.test(file.name),
-  );
-  const otherFiles = files.filter(
-    (file) => !/^index\.(md|mdx|txt)$/i.test(file.name),
-  );
-  return [...indexFiles, ...otherFiles];
 }
 
 async function fetchFileContent(fileId: string, accessToken: string) {
@@ -101,12 +47,6 @@ export async function createDriveSource(): Promise<
   console.info("[drive] Initializing Drive source.");
   const session = await auth();
   const accessToken = getAccessToken(session);
-  const rootId = process.env.DRIVE_FOLDER_ID;
-
-  if (!rootId) {
-    console.error("[drive] Missing DRIVE_FOLDER_ID.");
-    throw new Error("DRIVE_FOLDER_ID environment variable is required.");
-  }
 
   if (!accessToken) {
     console.warn("[drive] No access token found; returning metadata only.");
@@ -115,16 +55,18 @@ export async function createDriveSource(): Promise<
     };
   }
 
+  const manifest = await getDriveManifest(accessToken);
   const pages: VirtualFile[] = [];
   const folderMeta: VirtualFile[] = [];
   let pageTreeNo = 0;
 
   for (const folderName of folderNames) {
     console.info(`[drive] Loading folder: ${folderName}`);
-    const folder = await listFolderByName(rootId, folderName, accessToken);
-    if (!folder) {
-      console.error(`[drive] Folder not found: ${folderName}`);
-      throw new Error(`Drive folder not found: ${folderName}`);
+    const folderKey = `docs/${folderName}`;
+    const tree = manifest.tree[folderKey];
+    if (!manifest.folders[folderKey] || !tree) {
+      console.error(`[drive] Missing manifest mapping for: ${folderKey}`);
+      throw new Error(`Manifest missing folder: ${folderKey}`);
     }
 
     folderMeta.push({
@@ -137,20 +79,22 @@ export async function createDriveSource(): Promise<
       },
     });
 
-    const files = orderFilesForTree(
-      await listFilesInFolder(folder.id, accessToken),
-    );
+    const files = tree
+      .map((id) => ({ id, file: manifest.files[id] }))
+      .filter((entry): entry is { id: string; file: ManifestFile } =>
+        Boolean(entry.file),
+      );
     console.info(
       `[drive] Found ${files.length} files in ${folderName}.`,
     );
 
-    for (const file of files) {
-      if (!isSupportedDoc(file.name)) {
+    for (const entry of files) {
+      if (!isSupportedDoc(entry.file.name)) {
         continue;
       }
 
       const currentTreeNo = pageTreeNo;
-      const virtualPath = `${folderName}/${currentTreeNo}: ${file.name}`;
+      const virtualPath = `${folderName}/${currentTreeNo}: ${entry.file.name}`;
 
       pages.push({
         type: "page",
@@ -160,7 +104,7 @@ export async function createDriveSource(): Promise<
           pageTreeNo: pageTreeNo++,
           async load() {
             console.info(`[drive] Loading file: ${virtualPath}`);
-            const content = await fetchFileContent(file.id, accessToken);
+            const content = await fetchFileContent(entry.id, accessToken);
             console.info(`[drive] Compiling file: ${virtualPath}`);
             return compile(virtualPath, content);
           },

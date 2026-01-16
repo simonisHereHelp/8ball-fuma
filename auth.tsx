@@ -2,12 +2,24 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
+const appUrl =
+  process.env.NEXT_PUBLIC_APP_URL
+  ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : undefined);
+
+if (appUrl) {
+  process.env.NEXTAUTH_URL = appUrl;
+  process.env.AUTH_URL = appUrl;
+}
+
 const {
   handlers,
   auth, // used server-side to read the session
   signIn,
   signOut,
 } = NextAuth({
+  trustHost: true,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,

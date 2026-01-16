@@ -1,5 +1,7 @@
 # Two methods: Naked load vs Redis load
 
+> ⚠️ This document is historical background. The current implementation uses a Drive-hosted `manifest.json` as the page-tree directory and does **not** use Redis or Cloudflare KV.
+
 ## Google Naked Load
 In this version, the server must perform multiple "Search" and "Fetch" operations on every request. Even with Next.js revalidate: 30, every cache miss triggers a cascade of network calls to Google.
 
