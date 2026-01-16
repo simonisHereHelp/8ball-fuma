@@ -21,6 +21,14 @@ The asset proxy route calls fetch(\${driveBaseUrl}/${fileId}?alt=media`), then r
 ![http_oxxostuido.tw](https://www.oxxostudio.tw/img/articles/201405/about-me.jpg)
 ```
 
+## Drive manifest source (no KV/Redis)
+This app uses a Drive-hosted `manifest.json` (stored at the root of Drive) as the authoritative map for:
+- folder IDs and page-tree order
+- file metadata for direct ID fetches
+- inline asset resolution for `![]()` paths
+
+We do **not** use Cloudflare KV or Redis for Drive caching; the manifest is fetched with Next.js revalidation and refreshed locally when its `updatedAt` value changes.
+
 ### Route handler signatures (Next.js 15+)
 
 ```ts
