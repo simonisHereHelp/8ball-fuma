@@ -13,8 +13,8 @@ const manifestFileId = "manifest.json";
 
 let cachedManifest: DriveManifest | null = null;
 
-async function fetchManifest(fileId: string, accessToken: string): Promise<DriveManifest> {
-  const url = `${driveBaseUrl}/${fileId}?alt=media`;
+async function fetchManifest(accessToken: string): Promise<DriveManifest> {
+  const url = `${driveBaseUrl}/${manifestFileId}?alt=media`;
   const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -29,20 +29,21 @@ async function fetchManifest(fileId: string, accessToken: string): Promise<Drive
   return (await res.json()) as DriveManifest;
 }
 
-export async function getDriveManifest(): Promise<DriveManifest> {
-  const session = await auth();
-  const accessToken = getAccessToken(session);
+export async function getDriveManifest(
+  providedAccessToken?: string,
+): Promise<DriveManifest> {
+  const accessToken = providedAccessToken ?? getAccessToken(await auth());
 
   if (!accessToken) {
     throw new Error("Unauthorized: missing access token.");
   }
 
   if (!cachedManifest) {
-    cachedManifest = await fetchManifest(manifestFileId, accessToken);
+    cachedManifest = await fetchManifest(accessToken);
     return cachedManifest;
   }
 
-  const latestManifest = await fetchManifest(manifestFileId, accessToken);
+  const latestManifest = await fetchManifest(accessToken);
   const latestUpdatedAt = latestManifest.updatedAt;
   const cachedUpdatedAt = cachedManifest.updatedAt;
 

@@ -1,5 +1,5 @@
 import { auth, getAccessToken } from "@/auth";
-import { getDriveManifest } from "@/lib/drive/manifest";
+import { getDriveManifest } from "@/lib/sources/manifest";
 
 const driveBaseUrl = "https://www.googleapis.com/drive/v3/files";
 
