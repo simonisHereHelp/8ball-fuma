@@ -9,12 +9,19 @@ export type DriveManifest = {
 };
 
 const driveBaseUrl = "https://www.googleapis.com/drive/v3/files";
-const manifestFileId = "manifest.json";
+const manifestFileId =
+  process.env.DRIVE_MANIFEST_FILE_ID ?? process.env.DRIVE_MANIFEST_ID;
 
 let cachedManifest: DriveManifest | null = null;
 
-async function fetchManifest(fileId: string, accessToken: string): Promise<DriveManifest> {
-  const url = `${driveBaseUrl}/${fileId}?alt=media`;
+async function fetchManifest(accessToken: string): Promise<DriveManifest> {
+  if (!manifestFileId) {
+    throw new Error(
+      "Missing DRIVE_MANIFEST_FILE_ID. Set it to the Google Drive file ID for manifest.json.",
+    );
+  }
+
+  const url = `${driveBaseUrl}/${manifestFileId}?alt=media`;
   const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -29,20 +36,21 @@ async function fetchManifest(fileId: string, accessToken: string): Promise<Drive
   return (await res.json()) as DriveManifest;
 }
 
-export async function getDriveManifest(): Promise<DriveManifest> {
-  const session = await auth();
-  const accessToken = getAccessToken(session);
+export async function getDriveManifest(
+  providedAccessToken?: string,
+): Promise<DriveManifest> {
+  const accessToken = providedAccessToken ?? getAccessToken(await auth());
 
   if (!accessToken) {
     throw new Error("Unauthorized: missing access token.");
   }
 
   if (!cachedManifest) {
-    cachedManifest = await fetchManifest(manifestFileId, accessToken);
+    cachedManifest = await fetchManifest(accessToken);
     return cachedManifest;
   }
 
-  const latestManifest = await fetchManifest(manifestFileId, accessToken);
+  const latestManifest = await fetchManifest(accessToken);
   const latestUpdatedAt = latestManifest.updatedAt;
   const cachedUpdatedAt = cachedManifest.updatedAt;
 
