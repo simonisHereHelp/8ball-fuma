@@ -3,7 +3,7 @@ import { compile, type CompiledPage } from "../compile-md";
 import { getTitleFromFile } from "../source";
 import { driveCategories, meta } from "../meta";
 import { auth, getAccessToken } from "@/auth";
-import { getDriveManifest } from "@/lib/drive/manifest";
+import { getDriveManifest } from "@/lib/sources/manifest";
 
 const folderNames = [...driveCategories];
 
