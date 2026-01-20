@@ -1,3 +1,6 @@
+## repo from Fuma2b
+不讀 manifest, 帶更改 （dynamic subfolder name upon load and list)
+
 ## 新的main2026
 
 成功：
