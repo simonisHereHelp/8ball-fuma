@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import Link from "next/link";
-import { BagelLogo } from "@/lib/meta";
+import { BagelLogo } from "@/lib/drive-active-subfolder-list";
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (

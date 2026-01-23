@@ -1,24 +1,37 @@
+import fs from "node:fs";
+import path from "node:path";
 import type { VirtualFile } from "fumadocs-core/source";
 import type { ComponentPropsWithoutRef } from "react";
 
 type BagelLogoProps = ComponentPropsWithoutRef<"svg">;
 
-export const driveOrder = [
-  { type: "folder", name: "AutosAndInsurance" },
-  { type: "folder", name: "BanksAndCards" },
-  { type: "folder", name: "HealthAndDental" },
-  { type: "folder", name: "HouseMaint" },
-  { type: "folder", name: "HousePatio" },
-  { type: "folder", name: "HouseUtilities" },
-  { type: "folder", name: "InvestAndIRA" },
-  { type: "folder", name: "SSAndMedicare" },
-  { type: "folder", name: "TaiwanHouse" },
-  { type: "folder", name: "TaiwanPersonalDocs" },
-  { type: "folder", name: "TaxDocs" },
-  { type: "folder", name: "Z-others" },
-] as const;
+type DriveActiveSubfolderList = {
+  subfolders: { topic: string }[];
+};
 
-export const driveCategories = driveOrder.map((entry) => entry.name);
+const driveActiveSubfolderListPath = path.join(
+  process.cwd(),
+  "json_canon",
+  "drive_active_subfolder_list.json",
+);
+
+const loadDriveActiveSubfolders = (): string[] => {
+  try {
+    const raw = fs.readFileSync(driveActiveSubfolderListPath, "utf8");
+    const data = JSON.parse(raw) as DriveActiveSubfolderList;
+    return data.subfolders
+      .map((entry) => entry.topic)
+      .filter((topic) => topic.length > 0);
+  } catch (error) {
+    console.warn(
+      "[drive] Unable to load drive_active_subfolder_list.json.",
+      error,
+    );
+    return [];
+  }
+};
+
+export const driveCategories = loadDriveActiveSubfolders();
 
 export const BagelLogo = ({ className, ...props }: BagelLogoProps) => {
   const svgClassName = `overflow-visible ${className ?? "size-12"}`;
