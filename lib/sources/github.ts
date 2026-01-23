@@ -3,7 +3,7 @@ import { Octokit } from "octokit";
 import { compile, type CompiledPage } from "../compile-md";
 import * as path from "node:path";
 import { getTitleFromFile } from "../source";
-import { meta } from "../meta";
+import { meta } from "../drive-active-subfolder-list";
 
 const token = process.env.GITHUB_TOKEN;
 if (!token) throw new Error(`environment variable GITHUB_TOKEN is needed.`);

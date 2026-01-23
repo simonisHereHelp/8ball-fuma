@@ -1,7 +1,7 @@
 import type { Source, VirtualFile } from "fumadocs-core/source";
 import { compile, type CompiledPage } from "../compile-md";
 import { getTitleFromFile } from "../source";
-import { driveCategories, meta } from "../meta";
+import { driveCategories, meta } from "../drive-active-subfolder-list";
 import { auth, getAccessToken } from "@/auth";
 
 const folderNames = [...driveCategories];

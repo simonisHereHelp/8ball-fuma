@@ -2,7 +2,7 @@ import type { Source, VirtualFile } from "fumadocs-core/source";
 import { compile, type CompiledPage } from "../compile-md";
 import * as path from "node:path";
 import { getTitleFromFile } from "../source";
-import { meta } from "../meta";
+import { meta } from "../drive-active-subfolder-list";
 import FastGlob from "fast-glob";
 import { readFile } from "node:fs/promises";
 

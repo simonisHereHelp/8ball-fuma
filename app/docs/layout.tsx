@@ -6,7 +6,7 @@ import { Body } from "./layout.client";
 import { auth, getAccessToken } from "@/auth";
 import { redirect } from "next/navigation";
 import type { Session } from "next-auth";
-import { BagelLogo } from "@/lib/meta";
+import { BagelLogo } from "@/lib/drive-active-subfolder-list";
 
 export const dynamic = "force-dynamic";
 
