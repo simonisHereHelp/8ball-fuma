@@ -1,5 +1,7 @@
-## repo from Fuma2b
-不讀 manifest, 帶更改 （dynamic subfolder name upon load and list)
+## Beta shot (matched with Camera repo)
+-load CanonJson with DriveActiveSubfolder List
+-page tree with matching keySlugs
+
 
 ## 新的main2026
 
