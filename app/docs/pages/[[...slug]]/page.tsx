@@ -138,8 +138,8 @@ export default async function Page(props: {
         )}
       </DocsBody>
       <VoiceAgentDock
-        pageTitle={content.title}
-        pagePath={page.url}
+        pageTitle={content.title ?? "Docs"}
+        pagePath={page.url ?? "/docs/pages"}
         pageSlug={slug.join("/") || "docs"}
       />
     </DocsPage>
