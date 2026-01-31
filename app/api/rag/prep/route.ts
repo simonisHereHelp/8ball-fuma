@@ -12,7 +12,9 @@ const flattenToc = (toc: TableOfContents) => {
   const walk = (items?: TableOfContents) => {
     if (!items) return;
     for (const item of items) {
-      lines.push(item.title);
+      if (typeof item.title === "string") {
+        lines.push(item.title);
+      }
       walk(item.children);
     }
   };
