@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSource } from "@/lib/source";
-const EMBEDDING_MODEL = "text-embedding-3-small";
-const BATCH_SIZE = 32;
+const BATCH_SIZE = 50;
 
 const cleanHost = (host: string) => host.replace(/\/$/, "");
 
@@ -24,52 +23,24 @@ const buildPageText = ({
   return segments.join("\n\n");
 };
 
-const embedBatch = async (apiKey: string, input: string[]) => {
-  const response = await fetch("https://api.openai.com/v1/embeddings", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: EMBEDDING_MODEL,
-      input,
-    }),
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    console.error("[rag/prep] OpenAI embeddings failed.", {
-      status: response.status,
-      message,
-    });
-    throw new Error(`OpenAI embeddings failed: ${message}`);
-  }
-
-  const data = (await response.json()) as {
-    data: { embedding: number[] }[];
-  };
-
-  return data.data.map((item) => item.embedding);
-};
-
 const upsertBatch = async (
   host: string,
   apiKey: string,
-  vectors: {
+  records: {
     id: string;
-    values: number[];
+    text: string;
     metadata: Record<string, string>;
   }[],
 ) => {
-  const response = await fetch(`${cleanHost(host)}/vectors/upsert`, {
+  const response = await fetch(`${cleanHost(host)}/records/upsert`, {
     method: "POST",
     headers: {
       "Api-Key": apiKey,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      vectors,
+      namespace: "docs",
+      records,
     }),
   });
 
@@ -86,16 +57,14 @@ const upsertBatch = async (
 export async function POST() {
   const pineconeKey = process.env.PINECONE_API_KEY;
   const pineconeHost = process.env.PINECONE_HOST;
-  const openaiKey = process.env.OPENAI_API_KEY;
 
-  if (!pineconeKey || !pineconeHost || !openaiKey) {
+  if (!pineconeKey || !pineconeHost) {
     console.error("[rag/prep] Missing environment variables.", {
       hasPineconeKey: Boolean(pineconeKey),
       hasPineconeHost: Boolean(pineconeHost),
-      hasOpenAiKey: Boolean(openaiKey),
     });
     return NextResponse.json(
-      { error: "Missing Pinecone or OpenAI environment variables." },
+      { error: "Missing Pinecone environment variables." },
       { status: 500 },
     );
   }
@@ -105,10 +74,13 @@ export async function POST() {
     const pages = docsSource.getPages();
 
     let upserted = 0;
-    const inputs: string[] = [];
-    const metadata: { id: string; metadata: Record<string, string> }[] = [];
+    const records: {
+      id: string;
+      text: string;
+      metadata: Record<string, string>;
+    }[] = [];
 
-    console.info("[rag/prep] Preparing embeddings.", { pages: pages.length });
+    console.info("[rag/prep] Upsert to Pinecone...", { pages: pages.length });
 
     for (const page of pages) {
       const content = await page.data.load();
@@ -125,9 +97,9 @@ export async function POST() {
         continue;
       }
 
-      inputs.push(text);
-      metadata.push({
+      records.push({
         id: page.url,
+        text,
         metadata: {
           title: content.title ?? page.data.title,
           url: page.url,
@@ -136,29 +108,21 @@ export async function POST() {
         },
       });
 
-      if (inputs.length >= BATCH_SIZE) {
-        const embeddings = await embedBatch(openaiKey, inputs);
-        const vectors = embeddings.map((values, index) => ({
-          id: metadata[index].id,
-          values,
-          metadata: metadata[index].metadata,
-        }));
-        await upsertBatch(pineconeHost, pineconeKey, vectors);
-        upserted += vectors.length;
-        inputs.length = 0;
-        metadata.length = 0;
+      if (records.length >= BATCH_SIZE) {
+        await upsertBatch(pineconeHost, pineconeKey, records);
+        upserted += records.length;
+        const percent = Math.round((upserted / pages.length) * 100);
+        console.info("[rag/prep] Upsert progress.", {
+          message: `${percent}% upserts completed`,
+          upserted,
+        });
+        records.length = 0;
       }
     }
 
-    if (inputs.length > 0) {
-      const embeddings = await embedBatch(openaiKey, inputs);
-      const vectors = embeddings.map((values, index) => ({
-        id: metadata[index].id,
-        values,
-        metadata: metadata[index].metadata,
-      }));
-      await upsertBatch(pineconeHost, pineconeKey, vectors);
-      upserted += vectors.length;
+    if (records.length > 0) {
+      await upsertBatch(pineconeHost, pineconeKey, records);
+      upserted += records.length;
     }
 
     console.info("[rag/prep] Upsert complete.", { upserted });
@@ -166,6 +130,7 @@ export async function POST() {
     return NextResponse.json({
       status: "ok",
       upserted,
+      message: "Upsert to Pinecone...",
     });
   } catch (error) {
     console.error("[rag/prep] Failed to prepare embeddings.", error);
