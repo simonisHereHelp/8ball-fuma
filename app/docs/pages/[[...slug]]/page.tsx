@@ -1,4 +1,5 @@
 import { createMdxComponents } from "@/components/mdx";
+import { VoiceAgentDock } from "@/components/voice-agent/VoiceAgentDock";
 import { getSource, isLocal, normalizeRouteSegments } from "@/lib/source";
 import {
   DocsPage,
@@ -52,9 +53,9 @@ export default async function Page(props: {
         <DocsPage toc={[]} full>
           <DocsTitle>Docs</DocsTitle>
           <DocsDescription>Browse the available documents.</DocsDescription>
-          <DocsBody>
-            <ul className="space-y-2">
-              {pages.map((item) => (
+        <DocsBody>
+          <ul className="space-y-2">
+            {pages.map((item) => (
                 <li key={item.url}>
                   <Link
                     className="text-fd-primary underline-offset-4 hover:underline"
@@ -63,12 +64,17 @@ export default async function Page(props: {
                     {item.data.title}
                   </Link>
                 </li>
-              ))}
-            </ul>
-          </DocsBody>
-        </DocsPage>
-      );
-    }
+            ))}
+          </ul>
+        </DocsBody>
+        <VoiceAgentDock
+          pageTitle="Docs"
+          pagePath="/docs/pages"
+          pageSlug="docs"
+        />
+      </DocsPage>
+    );
+  }
 
     notFound();
   }
@@ -131,6 +137,11 @@ export default async function Page(props: {
           <DocsCategory page={page} from={docsSource} />
         )}
       </DocsBody>
+      <VoiceAgentDock
+        pageTitle={content.title ?? "Docs"}
+        pagePath={page.url ?? "/docs/pages"}
+        pageSlug={slug?.join("/") || "docs"}
+      />
     </DocsPage>
   );
 }
