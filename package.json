@@ -8,7 +8,8 @@
     "dev:local": "LOCAL=true next dev --turbo",
     "sync:docs": "git submodule update --init",
     "start": "next start",
-    "format": "prettier . -w"
+    "format": "prettier . -w",
+    "pinecone:upgrade": "pip install --upgrade pinecone"
   },
   "dependencies": {
     "@fumadocs/mdx-remote": "^1.1.3",
