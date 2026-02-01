@@ -8,8 +8,8 @@ export const baseOptions: BaseLayoutProps = {
       active: "nested-url",
     },
     {
-      text: "Page 2",
-      url: "/docs/pages?page=2",
+      text: "Prep RAG",
+      url: "/docs/prep-rag",
     },
   ],
 };
