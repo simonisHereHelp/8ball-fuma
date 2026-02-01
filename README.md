@@ -16,6 +16,10 @@ curl -X POST https://8ball-fuma.vercel.app/api/rag/prep
 The docs UI includes a dedicated **Prep RAG** page (`/docs/prep-rag`) that surfaces the RAG preparation workflow. It displays the current steps—corpus assembly, document normalization/chunking, and embedding generation—so teams can track progress while preparing the retrieval corpus for the documentation assistant.
 The backing API route (`/api/rag/prep`) can upsert page records into Pinecone when `PINECONE_API_KEY` and `PINECONE_HOST` are configured. It sends lightweight page metadata (title, description, URL, file type) and uses Pinecone’s hosted embedding model for content types like `.md`, `.mdx`, `.txt`, or `.pdf`.
 
+## Prep RAG feature
+The docs UI includes a dedicated **Prep RAG** page (`/docs/prep-rag`) that surfaces the RAG preparation workflow. It displays the current steps—corpus assembly, document normalization/chunking, and embedding generation—so teams can track progress while preparing the retrieval corpus for the documentation assistant.
+The backing API route (`/api/rag/prep`) can upsert page records into Pinecone when `PINECONE_API_KEY` and `PINECONE_HOST` are configured. Optional `PINECONE_INDEX_NAME` and `PINECONE_NAMESPACE` control which index/namespace are targeted. It uses the Pinecone Node SDK with hosted embeddings for content types like `.md`, `.mdx`, `.txt`, or `.pdf`.
+
 
 ## 新的main2026
 
