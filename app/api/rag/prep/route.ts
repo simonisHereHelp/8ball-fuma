@@ -22,7 +22,7 @@ const buildPageText = ({
   return segments.join("\n\n");
 };
 
-export async function POST() {
+export async function POST(request: Request) {
   const pineconeKey = process.env.PINECONE_API_KEY;
   const pineconeHost = process.env.PINECONE_HOST;
   const pineconeIndex = process.env.PINECONE_INDEX_NAME ?? "8ball-fuma";
@@ -51,6 +51,44 @@ export async function POST() {
         }[];
       }) => Promise<unknown>;
     };
+    const requestBody =
+      request.headers.get("content-type")?.includes("application/json") === true
+        ? await request.json().catch(() => null)
+        : null;
+    const mockRecords = Array.isArray(requestBody?.records)
+      ? requestBody.records
+      : null;
+
+    if (mockRecords) {
+      const records = mockRecords.filter(
+        (record: { id?: string; text?: string }) =>
+          Boolean(record?.id) && Boolean(record?.text),
+      );
+      if (records.length === 0) {
+        return NextResponse.json(
+          { error: "No valid mock records provided." },
+          { status: 400 },
+        );
+      }
+
+      console.info("[rag/prep] Upsert to Pinecone (mock mode)...", {
+        records: records.length,
+        index: pineconeIndex,
+        namespace: pineconeNamespace,
+      });
+
+      await index.upsertRecords({
+        namespace: pineconeNamespace,
+        records,
+      });
+
+      return NextResponse.json({
+        status: "ok",
+        upserted: records.length,
+        message: "Upsert to Pinecone (mock mode)...",
+      });
+    }
+
     const docsSource = await getSource();
     const pages = docsSource.getPages();
 
