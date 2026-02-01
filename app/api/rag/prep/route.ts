@@ -1,8 +1,7 @@
+import { Pinecone } from "@pinecone-database/pinecone";
 import { NextResponse } from "next/server";
 import { getSource } from "@/lib/source";
 const BATCH_SIZE = 50;
-
-const cleanHost = (host: string) => host.replace(/\/$/, "");
 
 const toSlug = (url: string) => url.replace(/^\/docs\/pages\/?/, "");
 const getFileType = (path: string) => {
@@ -23,40 +22,11 @@ const buildPageText = ({
   return segments.join("\n\n");
 };
 
-const upsertBatch = async (
-  host: string,
-  apiKey: string,
-  records: {
-    id: string;
-    text: string;
-    metadata: Record<string, string>;
-  }[],
-) => {
-  const response = await fetch(`${cleanHost(host)}/records/upsert`, {
-    method: "POST",
-    headers: {
-      "Api-Key": apiKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      namespace: "docs",
-      records,
-    }),
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    console.error("[rag/prep] Pinecone upsert failed.", {
-      status: response.status,
-      message,
-    });
-    throw new Error(`Pinecone upsert failed: ${message}`);
-  }
-};
-
 export async function POST() {
   const pineconeKey = process.env.PINECONE_API_KEY;
   const pineconeHost = process.env.PINECONE_HOST;
+  const pineconeIndex = process.env.PINECONE_INDEX_NAME ?? "8ball-fuma";
+  const pineconeNamespace = process.env.PINECONE_NAMESPACE ?? "docs";
 
   if (!pineconeKey || !pineconeHost) {
     console.error("[rag/prep] Missing environment variables.", {
@@ -70,6 +40,17 @@ export async function POST() {
   }
 
   try {
+    const pc = new Pinecone({ apiKey: pineconeKey });
+    const index = pc.index(pineconeIndex, pineconeHost) as unknown as {
+      upsertRecords: (args: {
+        namespace?: string;
+        records: {
+          id: string;
+          text: string;
+          metadata: Record<string, string>;
+        }[];
+      }) => Promise<unknown>;
+    };
     const docsSource = await getSource();
     const pages = docsSource.getPages();
 
@@ -80,7 +61,11 @@ export async function POST() {
       metadata: Record<string, string>;
     }[] = [];
 
-    console.info("[rag/prep] Upsert to Pinecone...", { pages: pages.length });
+    console.info("[rag/prep] Upsert to Pinecone...", {
+      pages: pages.length,
+      index: pineconeIndex,
+      namespace: pineconeNamespace,
+    });
 
     for (const page of pages) {
       const content = await page.data.load();
@@ -109,7 +94,10 @@ export async function POST() {
       });
 
       if (records.length >= BATCH_SIZE) {
-        await upsertBatch(pineconeHost, pineconeKey, records);
+        await index.upsertRecords({
+          namespace: pineconeNamespace,
+          records,
+        });
         upserted += records.length;
         const percent = Math.round((upserted / pages.length) * 100);
         console.info("[rag/prep] Upsert progress.", {
@@ -121,11 +109,18 @@ export async function POST() {
     }
 
     if (records.length > 0) {
-      await upsertBatch(pineconeHost, pineconeKey, records);
+      await index.upsertRecords({
+        namespace: pineconeNamespace,
+        records,
+      });
       upserted += records.length;
     }
 
-    console.info("[rag/prep] Upsert complete.", { upserted });
+    console.info("[rag/prep] Upsert complete.", {
+      upserted,
+      index: pineconeIndex,
+      namespace: pineconeNamespace,
+    });
 
     return NextResponse.json({
       status: "ok",
