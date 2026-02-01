@@ -1,17 +1,17 @@
 import { Pinecone } from "@pinecone-database/pinecone";
 import { NextResponse } from "next/server";
-import { getSource } from "@/lib/source";
 
-export async function POST(request: Request) {
+export async function POST() {
   const pineconeKey = process.env.PINECONE_API_KEY;
   const pineconeHost = process.env.PINECONE_HOST;
-  const pineconeIndex = process.env.PINECONE_INDEX_NAME ?? "8ball-fuma";
-  const pineconeNamespace = process.env.PINECONE_NAMESPACE ?? "docs";
+  const pineconeIndex = process.env.PINECONE_INDEX ?? "8ball-fuma";
+  const pineconeNamespace = process.env.PINECONE_NAMESPACE ?? "__default__";
 
-  if (!pineconeKey || !pineconeHost) {
+  if (!pineconeKey || !pineconeHost || !pineconeIndex) {
     console.error("[rag/prep] Missing environment variables.", {
       hasPineconeKey: Boolean(pineconeKey),
       hasPineconeHost: Boolean(pineconeHost),
+      hasPineconeIndex: Boolean(pineconeIndex),
     });
     return NextResponse.json(
       { error: "Missing Pinecone environment variables." },
@@ -21,85 +21,62 @@ export async function POST(request: Request) {
 
   try {
     const pc = new Pinecone({ apiKey: pineconeKey });
-    const index = pc.index(pineconeIndex, pineconeHost) as unknown as {
-      upsert: (args: {
-        namespace?: string;
-        vectors: {
-          id: string;
-          values: number[];
-          metadata?: Record<string, string>;
-        }[];
-      }) => Promise<unknown>;
+    const namespace = pc.index(pineconeIndex, pineconeHost).namespace(
+      pineconeNamespace,
+    ) as unknown as {
+      upsertRecords: (
+        records: {
+          _id: string;
+          chunk_text: string;
+          category?: string;
+          quarter?: string;
+        }[],
+      ) => Promise<unknown>;
     };
-    const requestBody =
-      request.headers.get("content-type")?.includes("application/json") === true
-        ? await request.json().catch(() => null)
-        : null;
-    const mockRecords = Array.isArray(requestBody?.records)
-      ? requestBody.records
-      : null;
-    const mockVectors = Array.isArray(requestBody?.vectors)
-      ? requestBody.vectors
-      : null;
+    const records = [
+      {
+        _id: "vec1",
+        chunk_text:
+          "AAPL reported a year-over-year revenue increase, expecting stronger Q3 demand for its flagship phones.",
+        category: "technology",
+        quarter: "Q3",
+      },
+      {
+        _id: "vec2",
+        chunk_text:
+          "Analysts suggest that AAPL's upcoming Q4 product launch event might solidify its position in the premium smartphone market.",
+        category: "technology",
+        quarter: "Q4",
+      },
+      {
+        _id: "vec3",
+        chunk_text:
+          "AAPL's strategic Q3 partnerships with semiconductor suppliers could mitigate component risks and stabilize iPhone production.",
+        category: "technology",
+        quarter: "Q3",
+      },
+      {
+        _id: "vec4",
+        chunk_text:
+          "AAPL may consider healthcare integrations in Q4 to compete with tech rivals entering the consumer wellness space.",
+        category: "technology",
+        quarter: "Q4",
+      },
+    ];
 
-    if (mockRecords || mockVectors) {
-      const vectors = (mockVectors ?? mockRecords ?? [])
-        .filter(
-          (record: { id?: string; values?: number[] }) =>
-            Boolean(record?.id) && Array.isArray(record?.values),
-        )
-        .map(
-          (record: {
-            id: string;
-            values: number[];
-            metadata?: Record<string, string>;
-          }) => ({
-            id: record.id,
-            values: record.values,
-            metadata: record.metadata,
-          }),
-        );
-      if (vectors.length === 0) {
-        return NextResponse.json(
-          { error: "No valid mock vectors provided." },
-          { status: 400 },
-        );
-      }
-
-      console.info("[rag/prep] Upsert to Pinecone (mock mode)...", {
-        vectors: vectors.length,
-        index: pineconeIndex,
-        namespace: pineconeNamespace,
-      });
-
-      await index.upsert({
-        namespace: pineconeNamespace,
-        vectors,
-      });
-
-      return NextResponse.json({
-        status: "ok",
-        upserted: vectors.length,
-        message: "Upsert to Pinecone (mock mode)...",
-      });
-    }
-
-    const docsSource = await getSource();
-    const pages = docsSource.getPages();
-
-    console.info("[rag/prep] Docs upsert skipped.", {
-      pages: pages.length,
+    console.info("[rag/prep] Upsert to Pinecone (template records)...", {
+      records: records.length,
       index: pineconeIndex,
       namespace: pineconeNamespace,
     });
 
-    return NextResponse.json(
-      {
-        error:
-          "Docs upsert requires vector embeddings. Send vectors in mock mode or use a Pinecone SDK that supports records upsert for hosted embeddings.",
-      },
-      { status: 400 },
-    );
+    await namespace.upsertRecords(records);
+
+    return NextResponse.json({
+      status: "ok",
+      upserted: records.length,
+      message: "Upsert to Pinecone (template records)...",
+    });
   } catch (error) {
     console.error("[rag/prep] Failed to prepare embeddings.", error);
     return NextResponse.json(
