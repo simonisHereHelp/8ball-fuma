@@ -1,28 +1,8 @@
 import { Pinecone } from "@pinecone-database/pinecone";
 import { NextResponse } from "next/server";
 import { getSource } from "@/lib/source";
-const BATCH_SIZE = 50;
 
-const toSlug = (url: string) => url.replace(/^\/docs\/pages\/?/, "");
-const getFileType = (path: string) => {
-  const match = path.split(".").pop();
-  return match ? match.toLowerCase() : "unknown";
-};
-
-const buildPageText = ({
-  title,
-  description,
-  url,
-}: {
-  title?: string;
-  description?: string;
-  url: string;
-}) => {
-  const segments = [title, description, url].filter(Boolean);
-  return segments.join("\n\n");
-};
-
-export async function POST() {
+export async function POST(request: Request) {
   const pineconeKey = process.env.PINECONE_API_KEY;
   const pineconeHost = process.env.PINECONE_HOST;
   const pineconeIndex = process.env.PINECONE_INDEX_NAME ?? "8ball-fuma";
@@ -42,91 +22,84 @@ export async function POST() {
   try {
     const pc = new Pinecone({ apiKey: pineconeKey });
     const index = pc.index(pineconeIndex, pineconeHost) as unknown as {
-      upsertRecords: (args: {
+      upsert: (args: {
         namespace?: string;
-        records: {
+        vectors: {
           id: string;
-          text: string;
-          metadata: Record<string, string>;
+          values: number[];
+          metadata?: Record<string, string>;
         }[];
       }) => Promise<unknown>;
     };
+    const requestBody =
+      request.headers.get("content-type")?.includes("application/json") === true
+        ? await request.json().catch(() => null)
+        : null;
+    const mockRecords = Array.isArray(requestBody?.records)
+      ? requestBody.records
+      : null;
+    const mockVectors = Array.isArray(requestBody?.vectors)
+      ? requestBody.vectors
+      : null;
+
+    if (mockRecords || mockVectors) {
+      const vectors = (mockVectors ?? mockRecords ?? [])
+        .filter(
+          (record: { id?: string; values?: number[] }) =>
+            Boolean(record?.id) && Array.isArray(record?.values),
+        )
+        .map(
+          (record: {
+            id: string;
+            values: number[];
+            metadata?: Record<string, string>;
+          }) => ({
+            id: record.id,
+            values: record.values,
+            metadata: record.metadata,
+          }),
+        );
+      if (vectors.length === 0) {
+        return NextResponse.json(
+          { error: "No valid mock vectors provided." },
+          { status: 400 },
+        );
+      }
+
+      console.info("[rag/prep] Upsert to Pinecone (mock mode)...", {
+        vectors: vectors.length,
+        index: pineconeIndex,
+        namespace: pineconeNamespace,
+      });
+
+      await index.upsert({
+        namespace: pineconeNamespace,
+        vectors,
+      });
+
+      return NextResponse.json({
+        status: "ok",
+        upserted: vectors.length,
+        message: "Upsert to Pinecone (mock mode)...",
+      });
+    }
+
     const docsSource = await getSource();
     const pages = docsSource.getPages();
 
-    let upserted = 0;
-    const records: {
-      id: string;
-      text: string;
-      metadata: Record<string, string>;
-    }[] = [];
-
-    console.info("[rag/prep] Upsert to Pinecone...", {
+    console.info("[rag/prep] Docs upsert skipped.", {
       pages: pages.length,
       index: pineconeIndex,
       namespace: pineconeNamespace,
     });
 
-    for (const page of pages) {
-      const content = await page.data.load();
-      const text = buildPageText({
-        title: content.title ?? page.data.title,
-        description: content.description,
-        url: page.url,
-      });
-
-      if (!text.trim()) {
-        console.warn("[rag/prep] Skipping empty page payload.", {
-          url: page.url,
-        });
-        continue;
-      }
-
-      records.push({
-        id: page.url,
-        text,
-        metadata: {
-          title: content.title ?? page.data.title,
-          url: page.url,
-          slug: toSlug(page.url),
-          fileType: getFileType(page.file.path),
-        },
-      });
-
-      if (records.length >= BATCH_SIZE) {
-        await index.upsertRecords({
-          namespace: pineconeNamespace,
-          records,
-        });
-        upserted += records.length;
-        const percent = Math.round((upserted / pages.length) * 100);
-        console.info("[rag/prep] Upsert progress.", {
-          message: `${percent}% upserts completed`,
-          upserted,
-        });
-        records.length = 0;
-      }
-    }
-
-    if (records.length > 0) {
-      await index.upsertRecords({
-        namespace: pineconeNamespace,
-        records,
-      });
-      upserted += records.length;
-    }
-
-    console.info("[rag/prep] Upsert complete.", {
-      upserted,
-      index: pineconeIndex,
-      namespace: pineconeNamespace,
-    });
-
-    return NextResponse.json({
-      status: "ok",
-      upserted,
-      message: "Upsert to Pinecone...",
-    });
+    return NextResponse.json(
+      {
+        error:
+          "Docs upsert requires vector embeddings. Send vectors in mock mode or use a Pinecone SDK that supports records upsert for hosted embeddings.",
+      },
+      { status: 400 },
+    );
   } catch (error) {
     console.error("[rag/prep] Failed to prepare embeddings.", error);
     return NextResponse.json(
