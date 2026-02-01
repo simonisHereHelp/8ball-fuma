@@ -1,6 +1,16 @@
 ## Beta shot (matched with Camera repo)
 -load CanonJson with DriveActiveSubfolder List
 -page tree with matching keySlugs
+-Prep RAG: vector store to Picone cloud index (PICONE_API_KEY, PICONE_HOST)
+
+![alt text](./readme/picone_prep_rag.png)
+
+
+## Picone cloud
+host https://8ball-fuma-zhc9xjm.svc.aped-4627-b74a.pinecone.io
+curl -X POST https://8ball-fuma.vercel.app/api/rag/prep
+
+![alt text](./readme/pinecone_cloud.png)
 
 ## Prep RAG feature
 The docs UI includes a dedicated **Prep RAG** page (`/docs/prep-rag`) that surfaces the RAG preparation workflow. It displays the current steps—corpus assembly, document normalization/chunking, and embedding generation—so teams can track progress while preparing the retrieval corpus for the documentation assistant.
