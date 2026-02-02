@@ -16,6 +16,41 @@ curl -X POST https://8ball-fuma.vercel.app/api/rag/prep
 The docs UI includes a dedicated **Prep RAG** page (`/docs/prep-rag`) that surfaces the RAG preparation workflow. It displays the current steps—corpus assembly, document normalization/chunking, and embedding generation—so teams can track progress while preparing the retrieval corpus for the documentation assistant.
 The backing API route (`/api/rag/prep`) can upsert page records into Pinecone when `PINECONE_API_KEY` and `PINECONE_HOST` are configured. It sends lightweight page metadata (title, description, URL, file type) and uses Pinecone’s hosted embedding model for content types like `.md`, `.mdx`, `.txt`, or `.pdf`.
 
+## Dependency lockfile sync
+If you update `package.json`, regenerate the lockfile so dependency changes are reproducible:
+
+```bash
+pnpm install
+```
+
+When working in restricted environments, ensure your npm registry access is configured (e.g., credentials or proxy) before running `pnpm install` so `pnpm-lock.yaml` can update cleanly.
+
+## Pinecone Upsert reference code
+
+```ts
+const BATCH_SIZE = 100;
+for (let i = 0; i < records.length; i += BATCH_SIZE) {
+  const batch = records.slice(i, i + BATCH_SIZE);
+
+  // NOTE: TS SDK expects { records: [...] }
+  await ns.upsertRecords({
+    records: batch.map((r) => ({
+      id: r.id,
+      chunk_text: r.chunk_text,
+      // everything else becomes metadata
+      category: r.category,
+      source_file: r.source_file,
+      doc_type: r.doc_type,
+      element_type: r.element_type,
+      chunk_index: r.chunk_index,
+      image_path: r.image_path,
+      image_alt: r.image_alt,
+      image_index: r.image_index,
+    })),
+  });
+}
+```
+
 ## Prep RAG feature
 The docs UI includes a dedicated **Prep RAG** page (`/docs/prep-rag`) that surfaces the RAG preparation workflow. It displays the current steps—corpus assembly, document normalization/chunking, and embedding generation—so teams can track progress while preparing the retrieval corpus for the documentation assistant.
 The backing API route (`/api/rag/prep`) can upsert page records into Pinecone when `PINECONE_API_KEY` and `PINECONE_HOST` are configured. Optional `PINECONE_INDEX_NAME` and `PINECONE_NAMESPACE` control which index/namespace are targeted. It uses the Pinecone Node SDK with hosted embeddings for content types like `.md`, `.mdx`, `.txt`, or `.pdf`.
