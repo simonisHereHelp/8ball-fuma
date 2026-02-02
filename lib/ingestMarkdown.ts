@@ -11,9 +11,7 @@ export type RecordForUpsert = {
   doc_type: "md" | "mdx";
   element_type: "markdown_text" | "markdown_image_ref";
   chunk_index: number;
-  image_path?: string;
   image_alt?: string;
-  image_index?: number;
 };
 
 function sha1Ascii(input: string) {
@@ -37,12 +35,11 @@ function chunkText(text: string, chunkSize = 1200, overlap = 200): string[] {
 
 function extractImages(markdown: string) {
   const re = /!\[([^\]]*)\]\(([^)]+)\)/g;
-  const out: Array<{ alt: string; imgPath: string; startIdx: number }> = [];
+  const out: Array<{ alt: string; startIdx: number }> = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(markdown)) !== null) {
     out.push({
       alt: (m[1] || "").trim(),
-      imgPath: (m[2] || "").trim(),
       startIdx: m.index,
     });
   }
@@ -108,14 +105,12 @@ export async function buildRecordsFromFilesFolder(
 
     const imageRefs = extractImages(body);
     imageRefs.forEach((ref, i) => {
-      const imageIndex = i + 1;
       const ctx = contextWindow(body, ref.startIdx, 500);
 
       const imageChunk =
         `FILE: ${fileName}\n` +
         `CATEGORY: ${category}\n` +
         `MD IMAGE:\n` +
-        `image_path: ${ref.imgPath}\n` +
         `alt_text: ${ref.alt}\n` +
         `nearby_context: ${ctx}`;
 
@@ -123,7 +118,7 @@ export async function buildRecordsFromFilesFolder(
       imgChunks.forEach((chunk, chunkIdx) => {
         const chunkIndex = chunkIdx + 1;
         records.push({
-          id: `${docId}#img${String(imageIndex).padStart(4, "0")}#c${String(
+          id: `${docId}#img${String(i + 1).padStart(4, "0")}#c${String(
             chunkIndex,
           ).padStart(3, "0")}`,
           chunk_text: chunk,
@@ -132,9 +127,7 @@ export async function buildRecordsFromFilesFolder(
           doc_type: docType,
           element_type: "markdown_image_ref",
           chunk_index: chunkIndex,
-          image_path: ref.imgPath,
           image_alt: ref.alt,
-          image_index: imageIndex,
         });
       });
     });
