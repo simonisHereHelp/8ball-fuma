@@ -3,6 +3,31 @@
 -page tree with matching keySlugs
 -Prep RAG: vector store to Picone cloud index (PICONE_API_KEY, PICONE_HOST)
 
+## Drive Active Subfolder List
+The docs sidebar categories are loaded from Google Drive at runtime rather than from a bundled local JSON file.
+
+Required env vars:
+
+```env
+DRIVE_FOLDER_ID=your_drive_root_folder_id
+DRIVE_ACTIVE_SUBFOLDER_PATH=10tXG7vNyzD9_lTqJxdH6NoQIK3JIw-JI
+```
+
+`DRIVE_ACTIVE_SUBFOLDER_PATH` supports:
+- a raw Google Drive file ID
+- a full Google Drive sharing URL
+- a Drive-relative path such as `doc/drive_active_subfolder_list.json`
+
+Notes:
+- The file content must be JSON with a top-level `subfolders` array and `topic` fields.
+- The signed-in Google account still needs Drive API access to the file.
+- After changing `.env`, restart or redeploy the app.
+
+Helpful logs:
+- `[drive] Initializing Drive source.`
+- `[docs-page] Failed to load docs source. Error: Drive file not found for DRIVE_ACTIVE_SUBFOLDER_PATH: ...`
+- `[docs] Failed to load docs source. Error: Drive file not found: drive_active_subfolder_list.json`
+
 ![alt text](./readme/picone_prep_rag.png)
 
 

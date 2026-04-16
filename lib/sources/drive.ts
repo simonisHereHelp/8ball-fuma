@@ -76,6 +76,32 @@ function normalizeDrivePathSegments(rawPath: string) {
     .filter((segment) => segment.length > 0);
 }
 
+function extractDriveFileId(input: string) {
+  const trimmed = input.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  const idFromUrlPatterns = [
+    /\/file\/d\/([a-zA-Z0-9_-]+)/,
+    /[?&]id=([a-zA-Z0-9_-]+)/,
+  ];
+
+  for (const pattern of idFromUrlPatterns) {
+    const match = pattern.exec(trimmed);
+    if (match?.[1]) {
+      return match[1];
+    }
+  }
+
+  if (/^[a-zA-Z0-9_-]{20,}$/.test(trimmed) && !trimmed.includes("/")) {
+    return trimmed;
+  }
+
+  return null;
+}
+
 async function listFilesInFolder(folderId: string, accessToken: string) {
   const params = new URLSearchParams({
     q: `'${folderId}' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false`,
@@ -117,6 +143,11 @@ async function fetchFileContent(fileId: string, accessToken: string) {
   }
 
   return await res.text();
+}
+
+async function fetchDriveFile(fileId: string, accessToken: string) {
+  const url = `${driveBaseUrl}/${fileId}?fields=id,name,mimeType`;
+  return await driveFetch<DriveFile>(url, accessToken);
 }
 
 async function resolveDriveFileByPath(
@@ -182,11 +213,24 @@ async function getDriveCategories(rootId: string, accessToken: string) {
   let categoryFile = null;
 
   if (configuredPath) {
-    categoryFile = await resolveDriveFileByPath(
-      rootId,
-      configuredPath,
-      accessToken,
-    );
+    const configuredFileId = extractDriveFileId(configuredPath);
+
+    if (configuredFileId) {
+      try {
+        categoryFile = await fetchDriveFile(configuredFileId, accessToken);
+      } catch (error) {
+        throw new Error(
+          `Drive file not found for ${DRIVE_ACTIVE_SUBFOLDER_PATH_ENV}: ${configuredPath}`,
+          { cause: error },
+        );
+      }
+    } else {
+      categoryFile = await resolveDriveFileByPath(
+        rootId,
+        configuredPath,
+        accessToken,
+      );
+    }
 
     if (!categoryFile) {
       throw new Error(
