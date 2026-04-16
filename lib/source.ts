@@ -19,7 +19,9 @@ const decodeSegment = (segment: string) => {
 export const isLocal =
   process.env.LOCAL || process.env.NEXT_PHASE === "phase-production-build";
 
-export const getSource = cache(async () =>
+const SOURCE_CACHE_WINDOW_MS = 30_000;
+
+const loadSource = cache(async (_bucket: number) =>
   loader({
     baseUrl: "/docs/pages",
     source: isLocal ? await createLocalSource() : await createDriveSource(),
@@ -42,6 +44,10 @@ export const getSource = cache(async () =>
     },
   }),
 );
+
+export function getSource() {
+  return loadSource(Math.floor(Date.now() / SOURCE_CACHE_WINDOW_MS));
+}
 
 export function getTitleFromFile(file: string) {
   const acronyms = ["css", "ui", "cli"];

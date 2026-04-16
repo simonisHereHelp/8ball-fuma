@@ -1,10 +1,12 @@
 import type { Source, VirtualFile } from "fumadocs-core/source";
 import { compile, type CompiledPage } from "../compile-md";
 import { getTitleFromFile } from "../source";
-import { driveCategories, meta } from "../drive-active-subfolder-list";
+import {
+  buildDriveRootMeta,
+  DRIVE_ACTIVE_SUBFOLDER_LIST_FILE,
+  parseDriveActiveSubfolders,
+} from "../drive-active-subfolder-list";
 import { auth, getAccessToken } from "@/auth";
-
-const folderNames = [...driveCategories];
 
 const driveBaseUrl = "https://www.googleapis.com/drive/v3/files";
 
@@ -12,6 +14,10 @@ type DriveFile = {
   id: string;
   name: string;
   mimeType?: string;
+};
+
+type DriveListResponse = {
+  files: DriveFile[];
 };
 
 async function driveFetch<T>(url: string, accessToken: string): Promise<T> {
@@ -41,7 +47,23 @@ async function listFolderByName(
   });
 
   const url = `${driveBaseUrl}?${params.toString()}`;
-  const data = await driveFetch<{ files: DriveFile[] }>(url, accessToken);
+  const data = await driveFetch<DriveListResponse>(url, accessToken);
+  return data.files[0];
+}
+
+async function listFileByName(
+  parentId: string,
+  name: string,
+  accessToken: string,
+) {
+  const params = new URLSearchParams({
+    q: `'${parentId}' in parents and mimeType != 'application/vnd.google-apps.folder' and name = '${name}' and trashed = false`,
+    fields: "files(id,name,mimeType)",
+    pageSize: "1",
+  });
+
+  const url = `${driveBaseUrl}?${params.toString()}`;
+  const data = await driveFetch<DriveListResponse>(url, accessToken);
   return data.files[0];
 }
 
@@ -53,7 +75,7 @@ async function listFilesInFolder(folderId: string, accessToken: string) {
   });
 
   const url = `${driveBaseUrl}?${params.toString()}`;
-  const data = await driveFetch<{ files: DriveFile[] }>(url, accessToken);
+  const data = await driveFetch<DriveListResponse>(url, accessToken);
   return data.files;
 }
 
@@ -88,6 +110,61 @@ async function fetchFileContent(fileId: string, accessToken: string) {
   return await res.text();
 }
 
+async function findDriveActiveSubfolderListFile(
+  rootId: string,
+  accessToken: string,
+) {
+  const directFile = await listFileByName(
+    rootId,
+    DRIVE_ACTIVE_SUBFOLDER_LIST_FILE,
+    accessToken,
+  );
+
+  if (directFile) {
+    return directFile;
+  }
+
+  for (const folderName of ["doc", "docs"]) {
+    const folder = await listFolderByName(rootId, folderName, accessToken);
+    if (!folder) {
+      continue;
+    }
+
+    const nestedFile = await listFileByName(
+      folder.id,
+      DRIVE_ACTIVE_SUBFOLDER_LIST_FILE,
+      accessToken,
+    );
+
+    if (nestedFile) {
+      return nestedFile;
+    }
+  }
+
+  return null;
+}
+
+async function getDriveCategories(rootId: string, accessToken: string) {
+  const categoryFile = await findDriveActiveSubfolderListFile(rootId, accessToken);
+
+  if (!categoryFile) {
+    throw new Error(
+      `Drive file not found: ${DRIVE_ACTIVE_SUBFOLDER_LIST_FILE}`,
+    );
+  }
+
+  const raw = await fetchFileContent(categoryFile.id, accessToken);
+  const categories = parseDriveActiveSubfolders(raw);
+
+  if (categories.length === 0) {
+    throw new Error(
+      `Drive file ${DRIVE_ACTIVE_SUBFOLDER_LIST_FILE} did not contain any topics.`,
+    );
+  }
+
+  return categories;
+}
+
 export async function createDriveSource(): Promise<
   Source<{
     metaData: { title: string; pages: string[] };
@@ -111,10 +188,12 @@ export async function createDriveSource(): Promise<
   if (!accessToken) {
     console.warn("[drive] No access token found; returning metadata only.");
     return {
-      files: [...meta],
+      files: [...buildDriveRootMeta([])],
     };
   }
 
+  const folderNames = await getDriveCategories(rootId, accessToken);
+  const meta = buildDriveRootMeta(folderNames);
   const pages: VirtualFile[] = [];
   const folderMeta: VirtualFile[] = [];
   let pageTreeNo = 0;

@@ -1,37 +1,37 @@
-import fs from "node:fs";
-import path from "node:path";
 import type { VirtualFile } from "fumadocs-core/source";
 import type { ComponentPropsWithoutRef } from "react";
 
 type BagelLogoProps = ComponentPropsWithoutRef<"svg">;
 
-type DriveActiveSubfolderList = {
+export type DriveActiveSubfolderList = {
   subfolders: { topic: string }[];
 };
 
-const driveActiveSubfolderListPath = path.join(
-  process.cwd(),
-  "json_canon",
-  "drive_active_subfolder_list.json",
-);
+export const DRIVE_ACTIVE_SUBFOLDER_LIST_FILE = "drive_active_subfolder_list.json";
 
-const loadDriveActiveSubfolders = (): string[] => {
-  try {
-    const raw = fs.readFileSync(driveActiveSubfolderListPath, "utf8");
-    const data = JSON.parse(raw) as DriveActiveSubfolderList;
-    return data.subfolders
-      .map((entry) => entry.topic)
-      .filter((topic) => topic.length > 0);
-  } catch (error) {
-    console.warn(
-      "[drive] Unable to load drive_active_subfolder_list.json.",
-      error,
+export function parseDriveActiveSubfolders(raw: string): string[] {
+  const data = JSON.parse(raw) as DriveActiveSubfolderList;
+  return data.subfolders
+    .map((entry) => entry.topic.trim())
+    .filter(
+      (topic, index, topics) =>
+        topic.length > 0 && topics.indexOf(topic) === index,
     );
-    return [];
-  }
-};
+}
 
-export const driveCategories = loadDriveActiveSubfolders();
+export function buildDriveRootMeta(categories: string[]): VirtualFile[] {
+  return [
+    {
+      type: "meta",
+      data: {
+        title: "99c Bagel",
+        root: true,
+        pages: categories.map((category) => `...${category}`),
+      },
+      path: "canary",
+    },
+  ];
+}
 
 export const BagelLogo = ({ className, ...props }: BagelLogoProps) => {
   const svgClassName = `overflow-visible ${className ?? "size-12"}`;
@@ -82,14 +82,3 @@ export const BagelLogo = ({ className, ...props }: BagelLogoProps) => {
   );
 };
 
-export const meta: VirtualFile[] = [
-  {
-    type: "meta",
-    data: {
-      title: "99c Bagel",
-      root: true,
-      pages: driveCategories.map((category) => `...${category}`),
-    },
-    path: "canary",
-  },
-];
