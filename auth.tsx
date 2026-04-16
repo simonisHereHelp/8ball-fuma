@@ -27,6 +27,9 @@ const {
     }),
   ],
   secret: process.env.AUTH_SECRET,
+  pages: {
+    error: "/auth/error",
+  },
 
   callbacks: {
     async jwt({ token, account }) {

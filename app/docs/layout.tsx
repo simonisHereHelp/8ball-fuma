@@ -24,7 +24,15 @@ export default async function Layout({ children }: { children: ReactNode }) {
     redirect("/");
   }
 
-  const source = await getSource();
+  let source;
+
+  try {
+    source = await getSource();
+  } catch (error) {
+    console.error("[docs] Failed to load docs source.", error);
+    redirect("/");
+  }
+
   return (
     <Body>
       <DocsLayout

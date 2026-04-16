@@ -10,7 +10,7 @@ import {
 } from "fumadocs-ui/page";
 import type { Page } from "fumadocs-core/source";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 
 export const revalidate = 7200;
 export const dynamic = "force-dynamic";
@@ -41,9 +41,17 @@ const getPageTreeNo = (page: Page) => {
 export default async function Page(props: {
   params: Promise<{ slug?: string[] }>;
 }) {
-  const docsSource = await getSource();
   const params = await props.params;
   const slug = normalizeRouteSegments(params.slug);
+  let docsSource;
+
+  try {
+    docsSource = await getSource();
+  } catch (error) {
+    console.error("[docs-page] Failed to load docs source.", error);
+    redirect("/");
+  }
+
   const page = docsSource.getPage(slug);
   if (!page) {
     if (!params.slug) {
@@ -76,23 +84,36 @@ export default async function Page(props: {
     );
   }
 
-    notFound();
+    redirect("/");
   }
 
-  let content = await page.data.load();
-  console.info("[docs-page] Loaded page content.", page.file.path);
+  let content;
   let renderFilePath = page.file.path;
 
-  if (content.source) {
-    const sourcePage = docsSource.getPage(content.source.split("/"));
+  try {
+    content = await page.data.load();
+    console.info("[docs-page] Loaded page content.", page.file.path);
 
-    if (!sourcePage)
-      throw new Error(
-        `unresolved source in frontmatter of ${page.file.path}: ${content.source}`,
-      );
-    content = await sourcePage.data.load();
-    console.info("[docs-page] Loaded source content.", sourcePage.file.path);
-    renderFilePath = sourcePage.file.path;
+    if (content.source) {
+      const sourcePage = docsSource.getPage(content.source.split("/"));
+
+      if (!sourcePage) {
+        throw new Error(
+          `unresolved source in frontmatter of ${page.file.path}: ${content.source}`,
+        );
+      }
+
+      content = await sourcePage.data.load();
+      console.info("[docs-page] Loaded source content.", sourcePage.file.path);
+      renderFilePath = sourcePage.file.path;
+    }
+  } catch (error) {
+    console.error("[docs-page] Failed to load page content.", {
+      slug,
+      path: page.file.path,
+      error,
+    });
+    redirect("/");
   }
 
   const MdxContent = content.body;
@@ -148,16 +169,31 @@ export default async function Page(props: {
 
 export async function generateStaticParams(): Promise<{ slug?: string[] }[]> {
   if (!isLocal) return [];
-  const docsSource = await getSource();
-  return docsSource.generateParams();
+  try {
+    const docsSource = await getSource();
+    return docsSource.generateParams();
+  } catch (error) {
+    console.error("[docs-page] Failed to generate static params.", error);
+    return [];
+  }
 }
 
 export async function generateMetadata(props: {
   params: Promise<{ slug?: string[] }>;
 }) {
-  const docsSource = await getSource();
   const params = await props.params;
   const slug = normalizeRouteSegments(params.slug);
+  let docsSource;
+
+  try {
+    docsSource = await getSource();
+  } catch (error) {
+    console.error("[docs-page] Failed to load docs source for metadata.", error);
+    return {
+      title: "Drive Docs",
+    };
+  }
+
   const page = docsSource.getPage(slug);
   if (!page) {
     if (!params.slug) {
@@ -165,7 +201,9 @@ export async function generateMetadata(props: {
         title: "Docs",
       };
     }
-    notFound();
+    return {
+      title: "Drive Docs",
+    };
   }
 
   return {
