@@ -20,6 +20,8 @@ type DriveListResponse = {
   files: DriveFile[];
 };
 
+const DRIVE_ACTIVE_SUBFOLDER_PATH_ENV = "DRIVE_ACTIVE_SUBFOLDER_PATH";
+
 async function driveFetch<T>(url: string, accessToken: string): Promise<T> {
   const res = await fetch(url, {
     headers: {
@@ -67,6 +69,13 @@ async function listFileByName(
   return data.files[0];
 }
 
+function normalizeDrivePathSegments(rawPath: string) {
+  return rawPath
+    .split("/")
+    .map((segment) => segment.trim())
+    .filter((segment) => segment.length > 0);
+}
+
 async function listFilesInFolder(folderId: string, accessToken: string) {
   const params = new URLSearchParams({
     q: `'${folderId}' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false`,
@@ -110,6 +119,30 @@ async function fetchFileContent(fileId: string, accessToken: string) {
   return await res.text();
 }
 
+async function resolveDriveFileByPath(
+  rootId: string,
+  rawPath: string,
+  accessToken: string,
+) {
+  const segments = normalizeDrivePathSegments(rawPath);
+
+  if (segments.length === 0) {
+    return null;
+  }
+
+  let parentId = rootId;
+
+  for (const folderName of segments.slice(0, -1)) {
+    const folder = await listFolderByName(parentId, folderName, accessToken);
+    if (!folder) {
+      return null;
+    }
+    parentId = folder.id;
+  }
+
+  return listFileByName(parentId, segments[segments.length - 1], accessToken);
+}
+
 async function findDriveActiveSubfolderListFile(
   rootId: string,
   accessToken: string,
@@ -145,7 +178,24 @@ async function findDriveActiveSubfolderListFile(
 }
 
 async function getDriveCategories(rootId: string, accessToken: string) {
-  const categoryFile = await findDriveActiveSubfolderListFile(rootId, accessToken);
+  const configuredPath = process.env[DRIVE_ACTIVE_SUBFOLDER_PATH_ENV]?.trim();
+  let categoryFile = null;
+
+  if (configuredPath) {
+    categoryFile = await resolveDriveFileByPath(
+      rootId,
+      configuredPath,
+      accessToken,
+    );
+
+    if (!categoryFile) {
+      throw new Error(
+        `Drive file not found for ${DRIVE_ACTIVE_SUBFOLDER_PATH_ENV}: ${configuredPath}`,
+      );
+    }
+  } else {
+    categoryFile = await findDriveActiveSubfolderListFile(rootId, accessToken);
+  }
 
   if (!categoryFile) {
     throw new Error(
